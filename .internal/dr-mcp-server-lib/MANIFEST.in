@@ -1,0 +1,12 @@
+include README.md
+include LICENSE
+include CHANGELOG.md
+include CONTRIBUTING.md
+include pyproject.toml
+recursive-include base *.py
+include base/py.typed
+recursive-include base/core/dynamic_tools/deployment/schemas *.json
+recursive-include base/docs *.md
+recursive-exclude base/data *.csv
+recursive-include base/tests *.py
+recursive-exclude base/tests test_*.py

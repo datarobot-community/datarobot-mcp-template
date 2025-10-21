@@ -1,0 +1,25 @@
+[project]
+name = "infra"
+version = "0.0.1"
+description = """
+This is an amazing application template that does wonderful things.
+  * Feature 1
+
+"""
+requires-python = ">=3.11"
+
+dependencies = [
+    "datarobot-pulumi-utils>=0.0.2.post8",
+    "pulumi>=3.175.0",
+    "pulumi-datarobot>=0.10.21",
+    "jinja2>=3.1.5,<4.0"
+]
+
+
+[project.optional-dependencies]
+dev = [
+    "pytest-cov>=6.1.1",
+    "pytest>=7.4.0",
+    "ruff>=0.3.0",
+    "mypy>=1.8.0",
+]

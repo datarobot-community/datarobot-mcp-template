@@ -1,0 +1,40 @@
+---
+name: runtime-params
+
+# This is a template for rendering custom model metadata.
+
+runtimeParameterDefinitions:
+  - fieldName: mcp_server_name
+    type: string
+  - fieldName: mcp_server_log_level
+    type: string
+  - fieldName: app_log_level
+    type: string
+  - fieldName: otel_collector_base_url
+    type: string
+  - fieldName: otel_entity_id
+    type: string
+  - fieldName: otel_attributes
+    type: string
+  - fieldName: otel_enabled
+    type: boolean
+  - fieldName: otel_enabled_http_instrumentors
+    type: boolean
+  - fieldName: aws_credential
+    type: credential
+    credentialType: s3
+    description: The AWS credential for accessing the S3 bucket.
+  - fieldName: aws_predictions_s3_bucket
+    type: string
+  - fieldName: aws_predictions_s3_prefix
+    type: string
+  - fieldName: enable_memory_management
+    type: boolean
+  - fieldName: tool_registration_allow_empty_schema
+    type: boolean
+  - fieldName: mcp_server_register_dynamic_tools_on_startup
+    type: boolean
+  - fieldName: tool_registration_duplicate_behavior
+    type: string
+  - fieldName: enable_predictive_tools
+    type: boolean

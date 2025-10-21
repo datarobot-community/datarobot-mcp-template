@@ -1,0 +1,192 @@
+---
+# https://taskfile.dev
+version: '3'
+
+tasks:
+  install:
+    desc: "🔧 Install dependencies"
+    cmds:
+      - echo "🔧 Installing dependencies..."
+      - uv sync --all-extras --dev
+    silent: true
+
+  build:
+    desc: "🔨 Build library package"
+    cmds:
+      - echo "🔨 Building library package..."
+      - rm -rf dist/ build/ *.egg-info
+      - uv build
+    silent: true
+
+  clean:
+    desc: "🧹 Clean build artifacts and cache"
+    cmds:
+      - echo "🧹 Cleaning build artifacts..."
+      - rm -rf dist/ build/ *.egg-info
+      - rm -rf .coverage .coverage.xml htmlcov
+      - rm -rf .pytest_cache .mypy_cache .ruff_cache
+      - find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+      - echo "✅ Cleaned"
+    silent: true
+
+  dev:
+    desc: "🔨 Running MCP locally"
+    cmds:
+      - echo "🔨 Starting development server"
+      - uv run server.py
+    silent: true
+
+  dev-background:
+    desc: "🔨 Running MCP locally in background"
+    vars:
+      PORT: 8082
+    cmds:
+      - echo "🔨 Starting development server"
+      - echo "MCP Server running on port {{.PORT}}"
+      # Kill any existing process on the port
+      - |
+        if lsof -i :{{.PORT}} > /dev/null 2>&1; then
+          echo "Killing existing process on port {{.PORT}}"
+          lsof -i :{{.PORT}} | grep LISTEN | awk '{print $2}' | xargs kill -9 2>/dev/null || true
+        fi
+      # Start server
+      - |
+        OTEL_ATTRIBUTES='{"environment":"test","service.instance.id":"ete-tests"}' \
+        OTEL_COLLECTOR_BASE_URL=http://localhost:4318 \
+        OTEL_ENTITY_ID=deployment-68924b8b51102f055bef861c \
+        MCP_SERVER_PORT={{.PORT}} uv run server.py &
+      # Wait for server to be ready
+      - |
+        for i in {1..30}; do
+          if curl -s http://localhost:{{.PORT}}/ > /dev/null 2>&1; then
+            echo "Server is ready"
+            break
+          fi
+          if [ $i -eq 30 ]; then
+            echo "Server failed to start"
+            exit 1
+          fi
+          sleep 1
+        done
+    silent: true
+
+  dev-otel-background:
+    desc: "🔨 Running MCP locally in background with OTEL"
+    cmds:
+      - echo "🔨 Starting development server with OTEL"
+      - >-
+        docker run -d --name jaeger -p 16686:16686 -p 4318:4318 -e COLLECTOR_OTLP_ENABLED=true jaegertracing/all-in-one:1.54
+        || docker start jaeger || true
+    silent: true
+
+  lint:
+    silent: true
+    desc: "🧹 Run linters"
+    cmds:
+      - echo "🧹 Running linters.."
+      - uv run ruff format .
+      - uv run ruff check . --fix
+      - uv run mypy --pretty --exclude 'base/tests' .
+
+  lint-check:
+    silent: true
+    desc: "🧹 Check whether the codebase is linted"
+    cmds:
+      - uv run ruff format --check .
+      - uv run ruff check .
+      - uv run mypy --pretty --exclude 'base/tests' .
+
+  test:
+    silent: true
+    desc: "🧪 Run tests"
+    cmds:
+      - rm -rf .coverage .coverage.xml htmlcov
+      - echo "🧪 Running all tests.."
+      - task unit
+      - task integration
+      - task ete
+
+  copyright:
+    aliases: [license]
+    desc: 📜 Apply license headers
+    cmds:
+      - echo "📜 Applying license headers"
+      - >-
+        docker run  --rm -v $PWD:/github/workspace ghcr.io/apache/skywalking-eyes/license-eye:eb0e0b091ea41213f712f622797e37526ca1e5d6
+        -v info -c .licenserc.yaml header fix
+
+  copyright-check:
+    aliases: [license-check]
+    desc: 📜 Checking for license headers
+    cmds:
+      - echo "📜 Checking license headers"
+      - >-
+        docker run  --rm -v $PWD:/github/workspace ghcr.io/apache/skywalking-eyes/license-eye:eb0e0b091ea41213f712f622797e37526ca1e5d6
+        -v info -c .licenserc.yaml header check
+
+  ete:
+    desc: "Run ETE tests"
+    cmds:
+      # Start jaeger in background
+      - task: dev-otel-background
+      # Start server with default port 8082
+      - task: dev-background
+      # Set up cleanup to run on exit
+      - defer: |
+          echo "Stopping MCP Server"
+          lsof -i :8082 | grep LISTEN | awk '{print $2}' | xargs kill -9 2>/dev/null || true
+          echo "Stopping Jaeger"
+          docker stop jaeger || true
+      # Run tests
+      - echo "Running ETE tests"
+      - uv run pytest {{if .CLI_ARGS}}{{.CLI_ARGS}}{{else}}base/tests/ete/{{end}} -s -vv
+    silent: true
+  integration:
+    desc: "Run integration tests"
+    cmds:
+      - echo "Running integration tests"
+      - uv sync --all-extras && uv run pytest {{if .CLI_ARGS}}{{.CLI_ARGS}}{{else}}base/tests/integration/{{end}} -s -vv
+    silent: true
+  unit:
+    desc: "Run unit tests"
+    cmds:
+      - rm -rf .coverage .coverage.xml htmlcov
+      - echo "Running unit tests"
+      - uv sync --all-extras && uv run pytest {{if .CLI_ARGS}}{{.CLI_ARGS}}{{else}}base/tests/unit/{{end}} --cov=app --cov-report=xml
+        --cov-report=html --cov-report=term-missing -s -vv
+    silent: true
+
+  test-interactive:
+    desc: "🧪 Run interactive MCP client test"
+    cmds:
+      - echo "🧪 Starting interactive MCP client test"
+      # Check if server is running on port 8082
+      - |
+        if ! curl -s http://localhost:8082/ > /dev/null 2>&1; then
+          echo "MCP server not running on port 8082. Starting it now..."
+          # Kill any existing process on the port
+          if lsof -i :8082 > /dev/null 2>&1; then
+            echo "Killing existing process on port 8082"
+            lsof -i :8082 | grep LISTEN | awk '{print $2}' | xargs kill -9 2>/dev/null || true
+          fi
+          # Start server
+          OTEL_ATTRIBUTES='{"environment":"test","service.instance.id":"ete-tests"}' \
+          MCP_SERVER_PORT=8082 uv run server.py &
+          # Wait for server to be ready
+          for i in {1..30}; do
+            if curl -s http://localhost:8082/ > /dev/null 2>&1; then
+              echo "Server is ready"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Server failed to start"
+              exit 1
+            fi
+            sleep 1
+          done
+        else
+          echo "MCP server already running on port 8082"
+        fi
+      - echo ""
+      - uv run python test_interactive.py
+    silent: true

@@ -1,0 +1,15 @@
+---
+name: "fastmcp-template"
+description: |-
+  This is an amazing application template that does wonderful things.
+  * Feature 1
+
+runtime:
+  name: python
+  options:
+    toolchain: uv
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: python
+  datarobot:tracecontext: "fastmcp-template"
