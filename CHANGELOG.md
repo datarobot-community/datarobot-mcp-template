@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased Changes
 
+## 11.2.1
+- Exclude unit test workflow from the public repo
+- Update documentations
+
 ## 11.2.0
 - Initial DataRobot MCP Template Implementation
 - DataRobot Predictive Tools

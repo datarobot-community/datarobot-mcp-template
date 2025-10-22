@@ -173,6 +173,51 @@ Once the FastMCP logo appears, the server is running properly.
 
 > **Note**: When finished, press `Ctrl+C` to stop the server.
 
+From here, you can perform some optional interactive testing on the local server using the steps in the next section. If you would like to skip straight to deploying a server, proceed to [Deployment](#deployment).
+
+### Test your tools interactively (optional)
+
+Once the server is running, you can immediately test your tools with an AI agent using the interactive testing mode:
+
+```bash
+task mcp:test-interactive
+```
+
+This command will:
+- Start the MCP server (if not already running locally)
+- Start a local AI agent connected to your MCP server
+- Provide an interactive chat interface to test your tools
+- Show real-time debug output of MCP server operations
+- Allow you to test tool implementations end-to-end prior to deployment
+
+The interactive mode displays detailed logs showing:
+- Tool registration and discovery
+- Request processing and responses
+- Error handling and debugging information
+- Agent decision-making process
+
+<img src="./img/interactive-testing-mode.png" width="600" alt="Interactive Testing Mode showing AI agent connected to MCP server with debug output" />
+
+> **Note**: The interactive testing requires an internet connection for the LLM, but all tool execution happens locally through your MCP server.
+
+### Error handling and debugging
+
+When developing tools, you'll encounter errors that need quick resolution. The MCP server provides detailed error information to help you iterate rapidly. The `test-interactive` command displays all of these in one place for you to see as you are testing the tools:
+
+- **Server logs** show real-time error details, including stack traces
+- **Tool execution errors** are captured and displayed with context
+- **Validation errors** highlight parameter issues immediately
+- **Connection errors** provide clear diagnostic information
+
+<img src="./img/mcp_error.png" width="600" alt="MCP server error display showing formatted error messages and stack traces" />
+
+Common debugging steps:
+1. Check server logs for detailed error messages
+2. Verify tool parameters match expected types
+3. Ensure DataRobot API credentials are valid
+4. Test individual tool functions in isolation
+5. Use the interactive mode to reproduce errors with real agent calls
+
 # Deployment
 
 Now that the local test passed, you can deploy the server to DataRobot.

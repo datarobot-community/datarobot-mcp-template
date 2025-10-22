@@ -94,7 +94,7 @@ def expectations_for_predict_from_project_data_success(
 
 @pytest.fixture(scope="session")
 def expectations_for_get_prediction_explanations_success(
-    classification_project_id: str, model_id: str, classification_dataset_id: str
+    classification_project_id: str, model_id: str, classification_predict_dataset: Any
 ) -> ETETestExpectations:
     return ETETestExpectations(
         tool_calls_expected=[
@@ -103,7 +103,7 @@ def expectations_for_get_prediction_explanations_success(
                 parameters={
                     "project_id": classification_project_id,
                     "model_id": model_id,
-                    "dataset_id": classification_dataset_id,
+                    "dataset_id": classification_predict_dataset["dataset_id"],
                 },
                 result=SHOULD_NOT_BE_EMPTY,
             ),
@@ -234,7 +234,7 @@ class TestPredictE2E(ToolBaseE2E):
         "prompt_template",
         [
             """
-        For project '{project_id}' and model '{model_id}', calculate prediction explanations using dataset '{dataset_id}'.
+        For project id '{project_id}' and model id '{model_id}', calculate prediction explanations using dataset id '{dataset_id}'.
         Return SHAP explanations.
         """
         ],
@@ -245,13 +245,13 @@ class TestPredictE2E(ToolBaseE2E):
         expectations_for_get_prediction_explanations_success: ETETestExpectations,
         classification_project_id: str,
         model_id: str,
-        classification_dataset_id: str,
+        classification_predict_dataset: Any,
         prompt_template: str,
     ) -> None:
         prompt = prompt_template.format(
             project_id=classification_project_id,
             model_id=model_id,
-            dataset_id=classification_dataset_id,
+            dataset_id=classification_predict_dataset["dataset_id"],
         )
 
         async with ete_test_mcp_session() as session:

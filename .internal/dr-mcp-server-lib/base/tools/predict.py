@@ -203,7 +203,8 @@ async def predict_from_project_data(
     )
 
 
-@dr_mcp_tool(tags={"prediction", "explanations", "shap"})
+# FIXME
+# @dr_mcp_tool(tags={"prediction", "explanations", "shap"})
 async def get_prediction_explanations(
     project_id: str,
     model_id: str,
