@@ -51,37 +51,74 @@ The template includes pre-built tools for common DataRobot operations, a structu
 
 # Prerequisites
 
-Ensure you have the following prerequisites installed:
+If you are using DataRobot codespaces, this is already complete for you. If not, install the following tools:
 
-- [**Python**](https://www.python.org/downloads/): A programming language (v3.11 or higher)
-  
-  ```bash
-  pyenv install 3.11
-  ```
+- [Python](https://www.python.org/downloads/) (3.11+ required for infrastructure and backend development)
+- [Taskfile.dev](https://taskfile.dev/#/installation) (task runner)
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) (Python package manager)
+- [Pulumi](https://www.pulumi.com/docs/iac/download-install/) (infrastructure as code)
 
-- [**git**](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git): A version control system (v2.30.0 or higher)
+## DataRobot codespaces setup
 
-  ```bash
-  brew install git # macOS
-  ```
+If you are developing within a DataRobot codespace, in order to test from the codespace the development ports need to be exposed. You can check this in the "Exposed Ports" section of your "Session Environment" tab (pictured below). You should have the ports 5173 (frontend), 8080 (application server) and 8842 (agent server) exposed. This should have been automatically enabled if you created this application template from the gallery, otherwise (e.g., if cloned) configure these ports manually. There will be a link next to the port to a URL where the service can be accessed when running locally in the codespace.
 
-- [**uv**](https://docs.astral.sh/uv/getting-started/installation/): A Python package manager (v0.6.10 or higher)
+![Screenshot of Codespaces Session Environment.](_docs/static/img/screenshot-codespaces-ports.png)
 
-  ```bash
-  curl -LsSf https://astral.sh/uv/install.sh | sh
-  ```
+#### Example Installation Commands
 
-- [**Task**](https://taskfile.dev/installation/): A task runner for development workflows (v3.43.3 or higher)
+For the latest and most accurate installation instructions for your platform, visit:
 
-  ```bash
-  brew install go-task/tap/go-task # macOS
-  ```
+- https://www.python.org/downloads/
+- https://taskfile.dev/installation/
+- https://docs.astral.sh/uv/getting-started/installation/
+- https://nodejs.org/en/download/
+- https://www.pulumi.com/docs/iac/download-install/
 
-- [**Pulumi**](https://www.pulumi.com/docs/iac/download-install/): An Infrastructure as Code tool (v3.163.0 or higher)
+We provide the instructions below to save you a context flip, but your system may not meet the common expectations from these shortcut scripts:
 
-  ```bash
-  brew install pulumi # macOS
-  ```
+**macOS:**
+
+```sh
+brew install python
+brew install go-task/tap/go-task
+brew install uv
+brew install pulumi/tap/pulumi
+```
+
+**Linux (Debian/Ubuntu/DataRobot codespaces):**
+
+```sh
+# Python
+sudo apt-get update
+sudo apt-get install -y python3 python3-pip python3-venv
+# Taskfile.dev
+sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
+# uv
+curl -Ls https://astral.sh/uv/install.sh | sh
+# Pulumi
+curl -fsSL https://get.pulumi.com | sh
+```
+
+**Windows (PowerShell):**
+
+```powershell
+# Python
+winget install --id=Python.Python.3.12 -e
+# Taskfile.dev
+winget install --id=Task.Task -e
+# uv
+winget install --id=astral-sh.uv  -e
+# Pulumi
+winget install pulumi
+winget upgrade pulumi
+# Windows Developer Tools
+winget install Microsoft.VisualStudio.2022.BuildTools --force --override "--wait --passive --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows11SDK.22621"
+
+# For Windows 10/11, toggle Developer Mode to "On" under System > For developer to enable symbolic link
+# Additionally, we use symlinks in the repo. Set
+git config --global core.symlink true
+# Alternatively, you can do it for just this repo by omitting the --global and running this in the repo.
+```
 
 - [**DataRobot Account**](https://app.datarobot.com/): Valid API credentials with appropriate permissions
 
@@ -132,6 +169,9 @@ DATAROBOT_ENDPOINT=[YOUR_DATAROBOT_ENDPOINT]
 
 # Optional - Dynamic tool registration
 # MCP_SERVER_REGISTER_DYNAMIC_TOOLS_ON_STARTUP=false
+
+# Optional - MCP target_type configuration
+# USE_MCP_TARGET_TYPE=true  # Set to false for older environments that don't support MCP
 
 # Optional - AWS credentials (for batch predictions and memory)
 # AWS_ACCESS_KEY_ID=your_aws_access_key
@@ -232,16 +272,19 @@ After deployment is successful, it creates the following resources:
 - **Prediction Environment**: DataRobot Serverless platform
 - **Deployment**: Active deployment with direct access endpoints
 
-## Obtain a Pulumi access token
+## Pulumi login
 
-The template uses Pulumi Infrastructure as Code for deployment.
-During the deploy process, you will be prompted to provide a Pulumi access token.
-First, navigate to the [Pulumi website](https://app.pulumi.com/) and create an account or log in with your existing account.
+Pulumi requires a location to store the state of the application template. The easiest option is to
+run:
 
-You can generate a new token by accessing the Pulumi [Personal access tokens](https://app.pulumi.com/user/settings/tokens?filter=all) page and clicking **Create token**.
-When the token is created, copy the token and paste it into the `task` process when prompted.
+```
+pulumi login --local
+```
 
-For more details, see the [Pulumi documentation](https://www.pulumi.com/docs/reference/cloud-rest-api/personal-access-tokens/).
+We recommend using a shared backend like Pulumi Cloud, Ceph, Minio, S3, or Azure Blob Storage. See
+[Managing Pulumi State and Backends](https://www.pulumi.com/docs/iac/concepts/state-and-backends/) for
+more details. For production CI/CD information see our comprehensive
+[CI/CD Guide for Application Templates](https://docs.datarobot.com/en/docs/workbench/wb-apps/app-templates/pulumi-tasks/cicd-tutorial.html)
 
 ## Deploy to DataRobot
 
@@ -274,7 +317,7 @@ When the deployment is complete, the process displays the MCP server details:
 To check the overall deployment status:
 
 ```bash
-cd infra && uv run pulumi stack
+task infra:info
 ```
 
 <img src="./img/mcp-status.png" width="600" />
@@ -301,9 +344,26 @@ Use the `MCP_SERVER_MCP_ENDPOINT` URL (shown in the **outputs** section in the s
 
 # Advanced options
 
+## MCP Target Type Configuration
+
+The template supports both MCP and Unstructured target types for DataRobot Custom Models. By default, it uses the MCP target type, but you can configure it for older environments that don't support MCP.
+
+### Environment Variable Configuration
+
+Set the `USE_MCP_TARGET_TYPE` environment variable to control the target type:
+
+```bash
+# For older environments that don't support MCP
+USE_MCP_TARGET_TYPE=false task deploy
+```
+
 ## Runtime Parameters
 
-Customize deployment parameters in `infra/infra/recipe.py`:
+Customize deployment parameters by modifying the following files:
+
+### infra/infra/user_params.py
+
+Add your custom runtime parameters in the infrastructure:
 
 ```python
 MCP_RECIPE_RUNTIME_PARAMETERS = [
@@ -316,7 +376,37 @@ MCP_RECIPE_RUNTIME_PARAMETERS = [
 ]
 ```
 
-These parameters will be available as environment variables in the deployed server.
+### dr_mcp/user-metadata.yaml
+
+Add your custom runtime parameters to the schema:
+
+```yaml
+runtimeParameterDefinitions:
+  - fieldName: user_name
+    type: string
+  # Add your custom runtime parameters here
+```
+
+### dr_mcp/app/core/user_config.py
+
+Update the parameter handling:
+
+```python
+class UserAppConfig(BaseSettings):
+    """User-specific application configuration."""
+
+    # Example of adding user-specific configuration
+    user_name: str = Field(
+        default="default-user",
+        validation_alias=AliasChoices(
+            RUNTIME_PARAM_ENV_VAR_NAME_PREFIX + "USER_NAME",
+            "USER_NAME",
+        ),
+        description="Name of the user account in use.",
+    )
+```
+
+These parameters will be available as environment variables in the deployed server and can be accessed through the `get_user_config()` function.
 
 ## Debugging
 

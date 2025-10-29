@@ -1,7 +1,7 @@
 [project]
 
 name = "dr-mcp"
-version = "11.2.1"
+version = "11.2.2"
 description = "DataRobot MCP Server"
 readme = "README.md"
 requires-python = ">=3.11"

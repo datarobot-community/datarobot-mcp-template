@@ -334,6 +334,18 @@ if aws_predictions_s3_prefix := os.getenv("AWS_PREDICTIONS_S3_PREFIX"):
 deployments_model_runtime_parameters.extend(MCP_USER_RUNTIME_PARAMETERS)
 custom_model_files = get_deployments_app_files(deployments_model_runtime_parameters)
 
+
+use_mcp = os.getenv("USE_MCP_TARGET_TYPE", "true").lower() == "true"
+
+if use_mcp:
+    pulumi.info("Using MCP target_type")
+    target_type = "MCP"
+    target_name = None
+else:
+    pulumi.info("Using unstructured target_type for older environment")
+    target_type = "Unstructured"
+    target_name = "resultText"
+
 custom_model = pulumi_datarobot.CustomModel(
     resource_name="Custom Model",
     name=asset_name,
@@ -341,8 +353,9 @@ custom_model = pulumi_datarobot.CustomModel(
     language="python",
     base_environment_id=execution_environment.id,
     base_environment_version_id=execution_environment.version_id,
-    target_type="MCP",
-    resource_bundle_id="cpu.small",  # Use API /mlops/compute/bundles/?useCases=customModel to get list of avalable bundles
+    target_type=target_type,
+    target_name=target_name,
+    resource_bundle_id="cpu.small",  # Use API /mlops/compute/bundles/?useCases=customModel to get list of available bundles
     files=custom_model_files,
     use_case_ids=[use_case.id],
     runtime_parameter_values=deployments_model_runtime_parameters,

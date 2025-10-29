@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased Changes
 
+## 11.2.2
+- Update documentation
+- Add deployment support to old releases
+- Implement header forwarding
+- Pin fastmcp to 2.12.2
+
 ## 11.2.1
 - Exclude unit test workflow from the public repo
 - Update documentations

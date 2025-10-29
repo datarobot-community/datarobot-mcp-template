@@ -14,14 +14,25 @@
 
 import asyncio
 import logging
-from typing import Any, Callable, Coroutine, Dict, Literal, Optional, Set
+from typing import (
+    Any,
+    Callable,
+    Coroutine,
+    Dict,
+    Literal,
+    MutableMapping,
+    Optional,
+    Set,
+)
 from urllib.parse import urljoin
 
 import aiohttp
 from aiohttp import ClientTimeout
 from aiohttp_retry import ExponentialRetry, RetryClient
+from fastmcp.server.dependencies import get_http_headers
 from fastmcp.tools.tool import Tool, ToolResult
 from pydantic import BaseModel, Field
+from requests.structures import CaseInsensitiveDict  # type: ignore[import-untyped]
 
 from base.core.config import get_config
 from base.core.dynamic_tools.schema import create_input_schema_pydantic_model
@@ -39,6 +50,13 @@ REQUEST_RETRYABLE_STATUS_CODES = {429, 570, 502, 503, 504}
 # HTTP connection timeouts in seconds
 REQUEST_CONNECT_TIMEOUT = 30
 REQUEST_TOTAL_TIMEOUT = 600
+
+# Headers that should be forwarded from incoming requests.
+# Keep this lower-cased for case-insensitive comparisons.
+REQUEST_FORWARDED_HEADERS: Set[str] = {
+    "x-agent-id",
+    "x-datarobot-authorization-context",
+}
 
 
 class ExternalToolRegistrationConfig(BaseModel):
@@ -102,7 +120,7 @@ def _external_tool_callable_factory(
         params = request_input.get("query_params")
         data = request_input.get("data")
         json = request_input.get("json")
-        headers = spec.headers or {}
+        headers = await get_outbound_headers(spec)
 
         # Build full URL with path params
         url = urljoin(spec.base_url, spec.endpoint.format(**path_params))
@@ -207,3 +225,34 @@ async def register_external_tool(
     )
 
     return registered_tool
+
+
+async def get_outbound_headers(spec: ExternalToolRegistrationConfig) -> dict[str, str]:
+    """Retrieve headers to send to the external tool.
+
+    The method forwards whitelisted headers from current FastMCP
+    HTTP request, with tool specific headers and user overrides.
+    """
+    headers = get_http_headers()
+
+    # Headers from the incoming request to be forwarded (case-insensitive, but preserve original casing)
+    forwarded_headers: Dict[str, str] = {
+        key: value
+        for key, value in headers.items()
+        if key.lower() in REQUEST_FORWARDED_HEADERS
+    }
+
+    # Tool-specific static headers with user-overrides
+    spec_headers = spec.headers or {}
+
+    # Use CaseInsensitiveDict for merging forwarded and spec_headers,
+    # to prevent duplicates differing only by case.
+    out_headers: MutableMapping[str, str] = CaseInsensitiveDict()
+
+    # Insert spec headers first so their casing is preserved if overridden.
+    out_headers.update(spec_headers)
+    for key, value in forwarded_headers.items():
+        if key not in out_headers:
+            out_headers[key] = value
+
+    return dict(out_headers)
