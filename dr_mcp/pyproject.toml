@@ -1,18 +1,13 @@
 [project]
 
-name = "dr-mcp"
-version = "11.2.2"
+name = "dr_mcp"
+version = "11.2.3"
 description = "DataRobot MCP Server"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    # DataRobot MCP Server Library - provides base server functionality
-    # All base dependencies are included in the library
-    "dr-mcp-server-lib",
+    "datarobot-genai[drmcp]>=0.1.25",
 ]
-
-[tool.uv.sources]
-dr-mcp-server-lib = { path = "../.internal/dr-mcp-server-lib" }
 
 [tool.hatch.metadata]
 allow-direct-references = true

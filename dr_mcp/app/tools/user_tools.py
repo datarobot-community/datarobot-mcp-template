@@ -14,7 +14,7 @@
 
 import logging
 
-from base import dr_mcp_tool  # noqa: F401
+from datarobot_genai.drmcp import dr_mcp_tool  # noqa: F401
 
 logger = logging.getLogger(__name__)
 

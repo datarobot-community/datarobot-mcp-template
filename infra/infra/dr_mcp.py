@@ -23,7 +23,9 @@ import datarobot as dr
 from datarobot_pulumi_utils.pulumi.stack import PROJECT_NAME
 
 from . import project_dir, use_case
-from .user_params import MCP_USER_RUNTIME_PARAMETERS
+
+from .dr_mcp_user_params import MCP_USER_RUNTIME_PARAMETERS
+
 
 EXCLUDE_PATTERNS = [
     re.compile(pattern)
@@ -168,12 +170,6 @@ def get_deployments_app_files(
                         rel_path = py_file.relative_to(deployments_application_path)
                         source_files.append((str(py_file), str(rel_path)))
 
-    # Add the dr-mcp-server-lib library files - the files will be located in
-    # /opt/code/.internal/dr-mcp-server-lib the docker image
-    for py_file in (project_dir.parent / ".internal/dr-mcp-server-lib").rglob("*.py"):
-        rel_path = py_file.relative_to(project_dir.parent)
-        source_files.append((str(py_file), str(rel_path)))
-
     # Filter out any files that match exclude patterns (safety check)
     source_files = [
         (file_path, file_name)
@@ -210,7 +206,7 @@ else:
         description="Execution environment for MCP server",
         programming_language="python",
         use_cases=["customModel"],
-        docker_context_path=str(project_dir.parent / "infra" / "docker"),
+        docker_context_path=str(project_dir.parent / "dr_mcp" / "docker"),
     )
 
 # Custom Model

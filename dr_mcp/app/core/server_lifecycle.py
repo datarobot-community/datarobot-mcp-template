@@ -15,7 +15,7 @@
 import logging
 from typing import Optional
 
-from base import BaseServerLifecycle
+from datarobot_genai.drmcp import BaseServerLifecycle
 from fastmcp import FastMCP
 
 

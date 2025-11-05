@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased Changes
 
+## 11.2.3
+- Upgrade to use datarobot-genai drmcp library
+- Rename infra user configs to be based on the mcp template name
+
 ## 11.2.2
 - Update documentation
 - Add deployment support to old releases

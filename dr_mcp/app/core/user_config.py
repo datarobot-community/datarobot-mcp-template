@@ -14,7 +14,7 @@
 
 from typing import Any, Optional
 
-from base import (
+from datarobot_genai.drmcp import (
     RUNTIME_PARAM_ENV_VAR_NAME_PREFIX,
     extract_datarobot_runtime_param_payload,
 )

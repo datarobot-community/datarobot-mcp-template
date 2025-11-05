@@ -14,6 +14,4 @@ fi
 
 # Start the MCP server
 echo "Starting MCP server..."
-# Remove this as soon as the dr-mcp-server-lib is installed via package manager
-export PYTHONPATH="/opt/code/.internal/dr-mcp-server-lib:${PYTHONPATH}"
 python -m app.main

@@ -361,7 +361,7 @@ USE_MCP_TARGET_TYPE=false task deploy
 
 Customize deployment parameters by modifying the following files:
 
-### infra/infra/user_params.py
+### infra/infra/dr_mcp_user_params.py
 
 Add your custom runtime parameters in the infrastructure:
 

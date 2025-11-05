@@ -19,8 +19,6 @@ recipe-fastmcp-template/
 │   │   └── assets/img/        # Images and icons
 │   ├── pyproject.toml         # Python dependencies
 │   ├── Taskfile.yaml          # Development tasks
-│   ├── build-app.sh           # Build script
-│   ├── start-app.sh           # Start script
 │   ├── metadata.yaml          # Application metadata
 │   ├── user-metadata.yaml     # User-specific metadata
 │   ├── uv.lock                # UV lock file

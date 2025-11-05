@@ -8,6 +8,7 @@ tasks:
     cmds:
       - echo "🔧 Installing dependencies.."
       - uv sync --all-extras
+      - task: generate-docker-requirement-file
     silent: true
 
   dev:
@@ -64,7 +65,6 @@ tasks:
     silent: true
 
   lint:
-    silent: true
     desc: "🧹 Run linters"
     cmds:
       - echo "🧹 Running linters.."
@@ -72,18 +72,18 @@ tasks:
       - uv run ruff format .
       - uv run ruff check . --fix
       - uv run mypy --pretty --exclude 'app/tests' .
+    silent: true
 
   lint-check:
-    silent: true
     desc: "🧹 Check whether the codebase is linted"
     cmds:
       - uv sync --all-extras
       - uv run ruff format --check .
       - uv run ruff check .
       - uv run mypy --pretty --exclude 'app/tests' .
+    silent: true
 
   test:
-    silent: true
     desc: "🧪 Run tests"
     cmds:
       - rm -rf .coverage .coverage.xml htmlcov
@@ -91,6 +91,7 @@ tasks:
       - task unit
       - task integration
       - task ete
+    silent: true
 
   copyright:
     aliases: [license]
@@ -181,3 +182,22 @@ tasks:
       - uv run python test_interactive.py
     silent: true
 
+  generate-docker-requirement-file:
+    desc: "🔨 Generate docker requirements.txt file"
+    cmds:
+      - echo "🔨 Generating docker requirements.txt file..."
+      # If the content of the requirement.txt file doesn't change, don't trigger an update
+      - >-
+        uv export --format requirements-txt --no-emit-project --project . > ./docker/requirements.txt.tmp && if ! cmp -s ./docker/requirements.txt.tmp
+        ./docker/requirements.txt; then mv ./docker/requirements.txt.tmp ./docker/requirements.txt; else rm ./docker/requirements.txt.tmp;
+        fi
+    silent: true
+
+  release_files:
+    desc: "🔨 Make sure to move these files to the root of the repository before a release"
+    cmds:
+      - echo "mv ./docs ../docs"
+      - echo "mv ./img ../img"
+      - echo "mv ./.env.example ../.env.example"
+      - echo "mv ./README.md ../README.md"
+    silent: true

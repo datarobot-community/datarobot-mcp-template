@@ -14,7 +14,7 @@
 
 import os
 
-from base import create_mcp_server
+from datarobot_genai.drmcp import create_mcp_server
 
 from app.core.server_lifecycle import ServerLifecycle
 from app.core.user_config import get_user_config

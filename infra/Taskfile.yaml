@@ -38,7 +38,6 @@ tasks:
     desc: "🔨 Deploy the infrastructure"
     cmds:
       - echo "🔨 Deploying the infrastructure.."
-      - task generate-docker-requirement-file
       - uv run pulumi up
 
   info:
@@ -70,16 +69,3 @@ tasks:
       - echo "📜 Checking license headers"
       - docker run  --rm -v $PWD:/github/workspace ghcr.io/apache/skywalking-eyes/license-eye:eb0e0b091ea41213f712f622797e37526ca1e5d6
         -v info -c .licenserc.yaml header check #magic___^_^___line
-
-  generate-docker-requirement-file:
-    desc: "🔨 Generate docker requirements.txt file"
-    cmds:
-      - echo "🔨 Generating docker requirements.txt file..."
-      # Until the dr-mcp-server-lib isn't release on PyPI, we copy the code of the lib into the custom model and add it to the
-      # PYTHONPATH manually.
-      # If the content of the requirement.txt file doesn't change, we don't want to re-write it as it will trigger an update of
-      - uv export --format requirements-txt --no-emit-project --project ../dr_mcp | sed '/^\.\.\/\.internal\/dr-mcp-server-lib$/d'
-        > ./docker/requirements.txt.tmp && if ! cmp -s ./docker/requirements.txt.tmp ./docker/requirements.txt; then mv ./docker/requirements.txt.tmp
-        ./docker/requirements.txt; else rm ./docker/requirements.txt.tmp; fi
-
-    silent: true

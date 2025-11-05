@@ -22,8 +22,7 @@ import asyncio
 import os
 from pathlib import Path
 
-from base.tests.ete.mcp_utils import get_dr_mcp_server_url, get_headers
-from base.tests.ete.openai_llm_mcp_client import LLMMCPClient
+from datarobot_genai.drmcp import LLMMCPClient, get_dr_mcp_server_url, get_headers
 from dotenv import load_dotenv
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
