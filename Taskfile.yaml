@@ -23,7 +23,7 @@ tasks:
     desc: "🟢 Run Pulumi up in [DEPLOY] mode"
     cmds:
       - echo "Running pulumi up"
-      - task mcp:install
+      - task: install
       - task infra:deploy
     silent: true
   refresh:

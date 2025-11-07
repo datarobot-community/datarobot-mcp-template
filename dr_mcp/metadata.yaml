@@ -38,3 +38,6 @@ runtimeParameterDefinitions:
     type: string
   - fieldName: enable_predictive_tools
     type: boolean
+  - fieldName: session_secret_key
+    type: credential
+    credentialType: api_token

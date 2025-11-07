@@ -1,9 +1,8 @@
 [project]
 
 name = "dr_mcp"
-version = "11.2.3"
+version = "11.2.4"
 description = "DataRobot MCP Server"
-readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "datarobot-genai[drmcp]>=0.1.25",

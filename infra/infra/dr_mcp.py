@@ -15,7 +15,7 @@
 import os
 import re
 import textwrap
-from typing import Sequence
+from typing import Sequence, Final
 
 import pulumi
 import pulumi_datarobot
@@ -86,6 +86,7 @@ __all__ = [
     "deployment",
     "mcp_server_mcp_endpoint",
     "mcp_server_base_endpoint",
+    "mcp_custom_model_runtime_parameters",
 ]
 
 asset_name: str = f"MCP Server [{PROJECT_NAME}]"
@@ -190,8 +191,8 @@ def get_deployments_app_files(
 
 
 # Execution Environment
-if len(os.environ.get("DATAROBOT_DEFAULT_EXECUTION_ENVIRONMENT", "")) > 0:
-    execution_environment_id = os.environ["DATAROBOT_DEFAULT_EXECUTION_ENVIRONMENT"]
+if len(os.environ.get("DATAROBOT_DEFAULT_MCP_EXECUTION_ENVIRONMENT", "")) > 0:
+    execution_environment_id = os.environ["DATAROBOT_DEFAULT_MCP_EXECUTION_ENVIRONMENT"]
 
     pulumi.info("Using existing execution environment: " + execution_environment_id)
     execution_environment = pulumi_datarobot.ExecutionEnvironment.get(
@@ -271,6 +272,27 @@ deployments_model_runtime_parameters: list[
         value=str(os.getenv("ENABLE_PREDICTIVE_TOOLS", "true")).lower(),
     ),
 ]
+
+
+# Session secret key credential.
+SESSION_SECRET_KEY: Final[str] = "SESSION_SECRET_KEY"
+
+if session_secret_key := os.getenv(SESSION_SECRET_KEY):
+    session_secret_cred = pulumi_datarobot.ApiTokenCredential(
+        "dr_mcp Session Secret Key",
+        args=pulumi_datarobot.ApiTokenCredentialArgs(
+            api_token=str(session_secret_key),
+        ),
+    )
+    deployments_model_runtime_parameters.append(
+        pulumi_datarobot.CustomModelRuntimeParameterValueArgs(
+            key=SESSION_SECRET_KEY.lower(),
+            type="credential",
+            value=session_secret_cred.id,
+        )
+    )
+    pulumi.export(SESSION_SECRET_KEY, session_secret_key)
+
 
 # Only add optional OTEL parameters if they have values
 if otel_collector_base_url := os.getenv("OTEL_COLLECTOR_BASE_URL"):
@@ -393,3 +415,13 @@ pulumi.export("Custom Model Id", custom_model.id)
 pulumi.export("Deployment Id", deployment.id)
 pulumi.export("MCP_SERVER_BASE_ENDPOINT", mcp_server_base_endpoint)
 pulumi.export("MCP_SERVER_MCP_ENDPOINT", mcp_server_mcp_endpoint)
+
+mcp_custom_model_runtime_parameters: list[
+    pulumi_datarobot.CustomModelRuntimeParameterValueArgs
+] = [
+    pulumi_datarobot.CustomModelRuntimeParameterValueArgs(
+        key="MCP_DEPLOYMENT_ID",
+        type="string",
+        value=deployment.id.apply(lambda id: f"{id}"),
+    )
+]

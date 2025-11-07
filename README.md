@@ -303,7 +303,7 @@ cp dr_mcp/.env .env
 ```bash
 
 # Optional: Use existing execution environment
-# export DATAROBOT_DEFAULT_EXECUTION_ENVIRONMENT=your_ee_id
+# export DATAROBOT_DEFAULT_MCP_EXECUTION_ENVIRONMENT=your_ee_id
 
 task deploy
 ```
