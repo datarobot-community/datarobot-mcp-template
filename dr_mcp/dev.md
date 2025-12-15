@@ -32,6 +32,8 @@ DATAROBOT_ENDPOINT=your_datarobot_endpoint
 # MCP_SERVER_REGISTER_DYNAMIC_TOOLS_ON_STARTUP=optional_true_optional
 # MCP_SERVER_TOOL_REGISTRATION_ALLOW_EMPTY_SCHEMA=optional_true_optional
 # MCP_SERVER_TOOL_REGISTRATION_DUPLICATE_BEHAVIOR=optional_warn_optional
+# MCP_SERVER_REGISTER_DYNAMIC_PROMPTS_ON_STARTUP=optional_true_optional
+# MCP_SERVER_PROMPT_REGISTRATION_DUPLICATE_BEHAVIOR=optional_warn_optional
 # APP_LOG_LEVEL=optional_DEBUG_optional
 # OTEL_COLLECTOR_BASE_URL=optional_OTEL_URL_optional
 # OTEL_ENABLED=optional_false_optional
@@ -151,6 +153,14 @@ When enabled, the server will scan for deployments tagged as tools (tag: tool) a
 ```bash
 # Enable/disable Dynamic Tool Registration on startup (default: false)
 MCP_SERVER_REGISTER_DYNAMIC_TOOLS_ON_STARTUP=true
+``` 
+
+### Dynamic Prompt Registration
+When enabled, the server will scan for DataRobot prompts.
+
+```bash
+# Enable/disable Dynamic Prompt Registration on startup (default: false)
+MCP_SERVER_REGISTER_DYNAMIC_PROMPTS_ON_STARTUP=true
 ``` 
 
 ### Debugging

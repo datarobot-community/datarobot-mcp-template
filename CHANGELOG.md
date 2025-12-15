@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased Changes
 
+## 11.4.0
+- Upgrade gen ai drmcp to 0.1.71 version
+- Upgrade core libraries
+- Fix client auth token
+- Add DR ascii banner
+- Add prefix for DR Pulumi assets when deployed
+- Fix task file
+- Add prompt management support
+- Add CLEAN_PYTHON_ENV for codespace env
+- Update README.md
+
 ## 11.2.4
 - Fix readme file bug
 - Add session secret

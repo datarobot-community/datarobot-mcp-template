@@ -55,11 +55,19 @@ async def test_mcp_interactive() -> None:
     }
     llm_client = LLMMCPClient(str(config))
 
-    print(f"🔗 Connecting to MCP server at: {get_dr_mcp_server_url()}")
+    # Get MCP server URL
+    mcp_server_url = get_dr_mcp_server_url()
+    if not mcp_server_url:
+        print("❌ Error: MCP server URL is not configured")
+        print("Please set the required environment variables for the MCP server URL")
+        return
+
+    print(f"🔗 Connecting to MCP server at: {mcp_server_url}")
 
     # Connect to the MCP server
     async with streamablehttp_client(
-        url=get_dr_mcp_server_url(), headers=get_headers()
+        url=mcp_server_url,
+        headers=get_headers(),
     ) as (
         read_stream,
         write_stream,

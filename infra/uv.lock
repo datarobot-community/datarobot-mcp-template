@@ -1,9 +1,10 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.11"
 resolution-markers = [
-    "python_full_version >= '3.11'",
-    "python_full_version < '3.11'",
+    "python_full_version >= '3.12'",
+    "python_full_version < '3.12'",
+    "python_version < '0'",
 ]
 
 [[package]]
@@ -294,7 +295,7 @@ requires-dist = [
     { name = "jinja2", specifier = ">=3.1.5,<4.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8.0" },
     { name = "pulumi", specifier = ">=3.175.0" },
-    { name = "pulumi-datarobot", specifier = ">=0.10.21" },
+    { name = "pulumi-datarobot", specifier = ">=0.10.27" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.4.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6.1.1" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.3.0" },
@@ -592,14 +593,14 @@ wheels = [
 
 [[package]]
 name = "pulumi-datarobot"
-version = "0.10.21"
+version = "0.10.27"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "parver" },
     { name = "pulumi" },
     { name = "semver" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7f/53/8a419f722bb5598b0a23eafbbe5e3ff1ec96888615046c3b1b4e7e7f827f/pulumi_datarobot-0.10.21.tar.gz", hash = "sha256:571ff168e686358a8823e8886b779c0787f6fb79f7389060a217a80295072a39", size = 115623, upload-time = "2025-10-15T18:13:13.436Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c0/d7/dbb2739da41c16941db82861aeb8cc73922924730a9e666d023d33104769/pulumi_datarobot-0.10.27.tar.gz", hash = "sha256:3c8374faef310c8ceed258b9f4f4cf9a1e37199f15fe17b23c44f8ae1ca45f06", size = 120005, upload-time = "2025-12-10T10:36:02.964Z" }
 
 [[package]]
 name = "pydantic"

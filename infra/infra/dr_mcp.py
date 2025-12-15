@@ -34,7 +34,7 @@ EXCLUDE_PATTERNS = [
         r".*tests/.*",
         r".*\.coverage",
         r".*coverage\.xml",
-        r".*coveragerc"
+        r".*coveragerc",
         r".*htmlcov/.*",
         r".*env",
         r".pre-commit-config.yaml",
@@ -89,7 +89,7 @@ __all__ = [
     "mcp_custom_model_runtime_parameters",
 ]
 
-asset_name: str = f"MCP Server [{PROJECT_NAME}]"
+mcp_server_asset_name: str = f"[{PROJECT_NAME}] [dr_mcp]"
 
 deployments_application_path = project_dir.parent / "dr_mcp"
 
@@ -197,17 +197,18 @@ if len(os.environ.get("DATAROBOT_DEFAULT_MCP_EXECUTION_ENVIRONMENT", "")) > 0:
     pulumi.info("Using existing execution environment: " + execution_environment_id)
     execution_environment = pulumi_datarobot.ExecutionEnvironment.get(
         id=execution_environment_id,
-        resource_name="Execution environment [PRE-EXISTING] for MCP Server",
+        resource_name=mcp_server_asset_name + " Execution Environment [PRE-EXISTING]",
     )
 else:
     pulumi.info("Using docker folder to compile the execution environment")
     execution_environment = pulumi_datarobot.ExecutionEnvironment(
-        resource_name="Execution Environment",
-        name=asset_name,
+        resource_name=mcp_server_asset_name + " Execution Environment",
+        name=mcp_server_asset_name,
         description="Execution environment for MCP server",
         programming_language="python",
         use_cases=["customModel"],
         docker_context_path=str(project_dir.parent / "dr_mcp" / "docker"),
+        opts=pulumi.ResourceOptions(retain_on_delete=False),
     )
 
 # Custom Model
@@ -243,6 +244,20 @@ deployments_model_runtime_parameters: list[
         type="boolean",
         value=str(
             os.getenv("MCP_SERVER_TOOL_REGISTRATION_ALLOW_EMPTY_SCHEMA", "false")
+        ).lower(),
+    ),
+    pulumi_datarobot.CustomModelRuntimeParameterValueArgs(
+        key="mcp_server_register_dynamic_prompts_on_startup",
+        type="boolean",
+        value=str(
+            os.getenv("MCP_SERVER_REGISTER_DYNAMIC_PROMPTS_ON_STARTUP", "false")
+        ).lower(),
+    ),
+    pulumi_datarobot.CustomModelRuntimeParameterValueArgs(
+        key="prompt_registration_duplicate_behavior",
+        type="string",
+        value=str(
+            os.getenv("MCP_SERVER_PROMPT_REGISTRATION_DUPLICATE_BEHAVIOR", "warn")
         ).lower(),
     ),
     pulumi_datarobot.CustomModelRuntimeParameterValueArgs(
@@ -286,7 +301,7 @@ if session_secret_key := os.getenv(SESSION_SECRET_KEY):
     )
     deployments_model_runtime_parameters.append(
         pulumi_datarobot.CustomModelRuntimeParameterValueArgs(
-            key=SESSION_SECRET_KEY.lower(),
+            key=SESSION_SECRET_KEY,
             type="credential",
             value=session_secret_cred.id,
         )
@@ -316,8 +331,8 @@ if otel_entity_id := os.getenv("OTEL_ENTITY_ID"):
 if aws_access_key_id := os.getenv("AWS_ACCESS_KEY_ID"):
     if aws_secret_access_key := os.getenv("AWS_SECRET_ACCESS_KEY"):
         credential = pulumi_datarobot.AwsCredential(
-            resource_name="AWS Credential",
-            name=asset_name,
+            resource_name=mcp_server_asset_name + " AWS Credential",
+            name=mcp_server_asset_name,
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key,
             aws_session_token=os.getenv("AWS_SESSION_TOKEN"),
@@ -365,8 +380,8 @@ else:
     target_name = "resultText"
 
 custom_model = pulumi_datarobot.CustomModel(
-    resource_name="Custom Model",
-    name=asset_name,
+    resource_name=mcp_server_asset_name + " Custom Model",
+    name=mcp_server_asset_name,
     description="MCP server",
     language="python",
     base_environment_id=execution_environment.id,
@@ -377,28 +392,34 @@ custom_model = pulumi_datarobot.CustomModel(
     files=custom_model_files,
     use_case_ids=[use_case.id],
     runtime_parameter_values=deployments_model_runtime_parameters,
+    tags=[
+        pulumi_datarobot.CustomModelTagArgs(
+            name="tool",
+            value="MCP",
+        ),
+    ],
 )
 
 # Register the custom model so it can be deployed
 registerd_model = pulumi_datarobot.RegisteredModel(
-    resource_name="Registered Model",
-    name=asset_name,
+    resource_name=mcp_server_asset_name + " Registered Model",
+    name=mcp_server_asset_name,
     custom_model_version_id=custom_model.version_id,
     use_case_ids=[use_case.id],
 )
 
 # Where to run the custom model
 base_prediction_environment = pulumi_datarobot.PredictionEnvironment(
-    resource_name="Prediction Environment",
-    name=asset_name,
+    resource_name=mcp_server_asset_name + " Prediction Environment",
+    name=mcp_server_asset_name,
     platform=dr.enums.PredictionEnvironmentPlatform.DATAROBOT_SERVERLESS,
     opts=pulumi.ResourceOptions(retain_on_delete=True),
 )
 
 # Deploy the registered custom model
 deployment = pulumi_datarobot.Deployment(
-    resource_name="Deployment",
-    label=asset_name,
+    resource_name=mcp_server_asset_name + " Deployment",
+    label=mcp_server_asset_name,
     use_case_ids=[use_case.id],
     registered_model_version_id=registerd_model.version_id,
     prediction_environment_id=base_prediction_environment.id,
@@ -411,10 +432,14 @@ mcp_server_mcp_endpoint = deployment.id.apply(
 mcp_server_base_endpoint = deployment.id.apply(
     lambda id: f"{datarobot_endpoint}/deployments/{id}/directAccess/"
 )
-pulumi.export("Custom Model Id", custom_model.id)
-pulumi.export("Deployment Id", deployment.id)
-pulumi.export("MCP_SERVER_BASE_ENDPOINT", mcp_server_base_endpoint)
-pulumi.export("MCP_SERVER_MCP_ENDPOINT", mcp_server_mcp_endpoint)
+pulumi.export(mcp_server_asset_name + " Custom Model Id", custom_model.id)
+pulumi.export(mcp_server_asset_name + " Deployment Id", deployment.id)
+pulumi.export(
+    mcp_server_asset_name + " MCP Server Base Endpoint", mcp_server_base_endpoint
+)
+pulumi.export(
+    mcp_server_asset_name + " MCP Server MCP Endpoint", mcp_server_mcp_endpoint
+)
 
 mcp_custom_model_runtime_parameters: list[
     pulumi_datarobot.CustomModelRuntimeParameterValueArgs

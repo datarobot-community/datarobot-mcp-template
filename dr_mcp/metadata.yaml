@@ -36,8 +36,12 @@ runtimeParameterDefinitions:
     type: boolean
   - fieldName: tool_registration_duplicate_behavior
     type: string
+  - fieldName: mcp_server_register_dynamic_prompts_on_startup
+    type: boolean
+  - fieldName: prompt_registration_duplicate_behavior
+    type: string
   - fieldName: enable_predictive_tools
     type: boolean
-  - fieldName: session_secret_key
+  - fieldName: SESSION_SECRET_KEY
     type: credential
     credentialType: api_token

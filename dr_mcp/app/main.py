@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import asyncio
 import os
+import sys
+from typing import Any
 
 from datarobot_genai.drmcp import create_mcp_server
 
@@ -20,7 +23,52 @@ from app.core.server_lifecycle import ServerLifecycle
 from app.core.user_config import get_user_config
 from app.core.user_credentials import get_user_credentials
 
+
+def suppress_keyboard_interrupt_traceback(
+    exc_type: type[BaseException] | None,
+    exc_value: BaseException | None,
+    exc_traceback: Any | None,
+) -> None:
+    """Suppress traceback for KeyboardInterrupt, exit cleanly for other exceptions."""
+    if exc_type is KeyboardInterrupt:
+        # Suppress KeyboardInterrupt traceback
+        sys.exit(0)
+    # Use default exception handler for other exceptions
+    if exc_type is not None and exc_value is not None:
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+
+
+def handle_asyncio_exception(
+    loop: asyncio.AbstractEventLoop, context: dict[str, Any]
+) -> None:
+    """Handle exceptions in asyncio tasks, suppressing KeyboardInterrupt tracebacks."""
+    exception = context.get("exception")
+    if isinstance(exception, KeyboardInterrupt):
+        # Suppress KeyboardInterrupt tracebacks during shutdown
+        return
+    # Let other exceptions be handled normally
+    default_handler = loop.default_exception_handler
+    if default_handler is not None:
+        default_handler(context)
+
+
+class CustomEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
+    """Custom event loop policy that sets exception handler for KeyboardInterrupt."""
+
+    def new_event_loop(self) -> asyncio.AbstractEventLoop:
+        loop = super().new_event_loop()
+        loop.set_exception_handler(handle_asyncio_exception)
+        return loop
+
+
 if __name__ == "__main__":
+    # Suppress KeyboardInterrupt tracebacks globally
+    sys.excepthook = suppress_keyboard_interrupt_traceback
+
+    # Set custom event loop policy to handle KeyboardInterrupt in asyncio tasks
+    # even when the loop is created inside server.run()
+    asyncio.set_event_loop_policy(CustomEventLoopPolicy())
+
     # Get paths to user modules
     app_dir = os.path.dirname(__file__)
 
@@ -37,4 +85,8 @@ if __name__ == "__main__":
         transport="streamable-http",
     )
 
-    server.run(show_banner=True)
+    try:
+        server.run(show_banner=True)
+    except KeyboardInterrupt:
+        # Exit cleanly on Ctrl+C without showing traceback
+        sys.exit(0)

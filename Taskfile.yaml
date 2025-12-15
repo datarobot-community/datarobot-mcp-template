@@ -19,6 +19,12 @@ includes:
       PARENT_ENV: '{{.PARENT_ENV}}'
 
 tasks:
+  default:
+    desc: "ℹ️ Show all available tasks (run `task --list-all` to see hidden tasks)"
+    cmds:
+      - task --list --sort none
+    silent: true
+
   deploy:
     desc: "🟢 Run Pulumi up in [DEPLOY] mode"
     cmds:
