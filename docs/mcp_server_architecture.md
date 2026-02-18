@@ -3,8 +3,7 @@
 ## Project structure
 
 ```
-recipe-fastmcp-template/
-├── dr_mcp/                    # Main application code
+├── dr_mcp/        # Main application code
 │   ├── app/
 │   │   ├── core/              # Core server logic, config, telemetry
 │   │   │   ├── server_lifecycle.py
@@ -92,6 +91,17 @@ This structure allows you to:
 |---------------------------------------------------|--------------------------------|---------|
 | `MCP_SERVER_REGISTER_DYNAMIC_TOOLS_ON_STARTUP`    | Auto-register tools on startup | `false` |
 | `MCP_SERVER_TOOL_REGISTRATION_DUPLICATE_BEHAVIOR` | How to handle duplicate tools  | `warn`  |
+
+</details>
+
+
+<details>
+<summary>Dynamic Prompt Registration</summary>
+
+| Variable                                            | Description                      | Default |
+|-----------------------------------------------------|----------------------------------|---------|
+| `MCP_SERVER_REGISTER_DYNAMIC_PROMPTS_ON_STARTUP`    | Auto-register prompts on startup | `false` |
+| `MCP_SERVER_PROMPT_REGISTRATION_DUPLICATE_BEHAVIOR` | How to handle duplicate prompts  | `warn`  |
 
 </details>
 

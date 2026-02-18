@@ -4,7 +4,7 @@
   </a>
 </p>
 <p align="center">
-    <span style="font-size: 1.5em; font-weight: bold; display: block;">FastMCP Server Template for DataRobot</span>
+    <span style="font-size: 1.5em; font-weight: bold; display: block;">MCP Server Template for DataRobot</span>
 </p>
 
 <p align="center">
@@ -37,7 +37,7 @@ The template includes pre-built tools for common DataRobot operations, a structu
 
 ---
 
-# FastMCP template navigation
+# DataRobot MCP template navigation
 
 - [Prerequisites](#prerequisites)
 - [Get started](#getting-started)
@@ -134,8 +134,8 @@ git config --global core.symlink true
 ## Clone the repository
 
 ```bash
-git clone https://github.com/datarobot/recipe-fastmcp-template.git
-cd recipe-fastmcp-template
+git clone https://github.com/datarobot-community/datarobot-mcp-template.git
+cd datarobot-mcp-template
 ```
 
 ## Install dependencies
@@ -182,6 +182,9 @@ SESSION_SECRET_KEY=[YOUR_SESSION_SECRET_KEY]
 # AWS_ACCESS_KEY_ID=your_aws_access_key
 # AWS_SECRET_ACCESS_KEY=your_aws_secret_key
 # AWS_PREDICTIONS_S3_BUCKET=your_s3_bucket
+
+# Optional - Dynamic prompt registration
+# MCP_SERVER_REGISTER_DYNAMIC_PROMPTS_ON_STARTUP=false
 ```
 
 ### Add API credentials
@@ -212,16 +215,16 @@ Open the DataRobot UI to locate and copy your DataRobot API key and endpoint to 
 
 ## Run locally
 
-From `/dr-mcp/`, start the server locally using the `task dev` command:
+From `/dr_mcp/`, start the server locally using the `task dev` command:
 
 ```bash
 task dev
 ```
 
 The server will start on `http://localhost:8080` with the MCP endpoint at `http://localhost:8080/mcp/`.
-Once the FastMCP logo appears, the server is running properly.
+Once the DataRobot logo appears, the server is running properly.
 
-<img src="./img/fastmcp-logo.png" width="300" />
+<img src="./img/mcp-logo.png" width="300" />
 
 > **Note**: When finished, press `Ctrl+C` to stop the server.
 
@@ -231,8 +234,10 @@ From here, you can perform some optional interactive testing on the local server
 
 Once the server is running, you can immediately test your tools with an AI agent using the interactive testing mode:
 
+From `/dr_mcp/`, run:
+
 ```bash
-task mcp:test-interactive
+task test-interactive
 ```
 
 This command will:
@@ -307,7 +312,7 @@ cd .. # Previous steps left off in the dr_mcp directory
 cp dr_mcp/.env .env
 ```
 
-1. Deploy to DataRobot using Pulumi:
+2. Deploy to DataRobot using Pulumi:
 
 > **Note**: During this process, you will be prompted to provide a new stack name and your Pulumi access token.
 > If prompted to perform an update, select "yes". Deployment can take several minutes to complete.
@@ -315,7 +320,9 @@ cp dr_mcp/.env .env
 ```bash
 
 # Optional: Use existing execution environment
-# export DATAROBOT_DEFAULT_MCP_EXECUTION_ENVIRONMENT=your_ee_id
+# export DATAROBOT_DEFAULT_MCP_EXECUTION_ENVIRONMENT="[DataRobot] Python 3.11 GenAI Agents"
+# If empty, the latest version of the execution environment will be used
+# DATAROBOT_DEFAULT_MCP_EXECUTION_ENVIRONMENT_VERSION_ID="698360476c9b9255ca8abeef"
 
 task deploy
 ```

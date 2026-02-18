@@ -128,13 +128,15 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+.env*
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+# Don't ignore template env file
+!.env.template
 
 # Spyder project settings
 .spyderproject
@@ -177,3 +179,9 @@ cython_debug/
 temp.txt
 
 /test_results/
+
+# DataRobot CLI stuff:
+#  .dr/state contains user-specific history and audit-trail while working with the CLI
+.datarobot/state/
+Taskfile.gen.yaml
+.datarobot/cli/state.yaml

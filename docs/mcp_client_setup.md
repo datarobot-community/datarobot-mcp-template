@@ -415,6 +415,20 @@ For a deployment to be auto-registered as a tool:
 
 For complete documentation, see the [Dynamic Tool Registration Guide](./dynamic_tool_registration.md).
 
+### Dynamic prompt registration
+
+**Use case:** When you have multiple DataRobot prompts that should be auto-discovered as prompts.
+
+Dynamic prompt registration allows the MCP server to automatically discover and register DataRobot prompts.
+
+#### Enable auto-registration
+
+Set the environment variable:
+
+```bash
+MCP_SERVER_REGISTER_DYNAMIC_PROMPTS_ON_STARTUP=true
+```
+
 ### OpenTelemetry tracing
 
 **Use case:** When you need distributed tracing for debugging and monitoring.

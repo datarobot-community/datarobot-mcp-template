@@ -4,15 +4,14 @@ version: '3'
 
 env:
   ENV: testing
-dotenv: ['.env', '.env.{{.ENV}}']
+dotenv: ['.env', '.env.{{ "{{" }}.ENV{{ "}}" }}']
 
 includes:
-  dr_mcp:
-    taskfile: ./dr_mcp/Taskfile.yaml
-    dir: ./dr_mcp
-  infra:
-    taskfile: ./infra/Taskfile.yaml
-    dir: ./infra
+  {{- range .Includes }}
+  {{ .Name }}:
+    taskfile: {{ .Taskfile }}
+    dir: {{ .Dir }}
+  {{- end }}
 
 tasks:
   default:
@@ -20,25 +19,42 @@ tasks:
     cmds:
       - task --list --sort none
     silent: true
+
+  {{- if .HasLint }}
   lint:
     desc: "Run linters"
     cmds:
-      - task: dr_mcp:lint
-      - task: infra:lint
+      {{- range .LintComponents }}
+      - task: {{ . }}:lint
+      {{- end }}
+  {{- end }}
+
+  {{- if .HasInstall }}
   install:
     desc: "Install dependencies"
     cmds:
-      - task: dr_mcp:install
-      - task: infra:install
+      {{- range .InstallComponents }}
+      - task: {{ . }}:install
+      {{- end }}
+  {{- end }}
+
+  {{- if .HasTest }}
   test:
     desc: "Run tests"
     cmds:
-      - task: dr_mcp:test
+      {{- range .TestComponents }}
+      - task: {{ . }}:test
+      {{- end }}
+  {{- end }}
+
+  {{- if .HasDev }}
   dev:
     desc: "🚀 Run all services together"
     cmds:
       - |
-        task dr_mcp:dev &
+        {{- range .DevComponents }}
+        task {{ . }}:dev &
+        {{- end }}
         sleep 8
         echo "✅ All started!"
         if [[ -n "$NOTEBOOK_ID" ]]; then
@@ -47,6 +63,7 @@ tasks:
           prefix="http://localhost:"
         fi
         wait
+  {{- end }}
 
   deploy:
     desc: "🚀 Deploy all services"

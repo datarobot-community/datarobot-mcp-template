@@ -13,15 +13,26 @@
 # limitations under the License.
 
 import asyncio
+import logging
 import os
 import sys
 from typing import Any
 
+import requests
+from datarobot.errors import ClientError
 from datarobot_genai.drmcp import create_mcp_server
 
 from app.core.server_lifecycle import ServerLifecycle
 from app.core.user_config import get_user_config
 from app.core.user_credentials import get_user_credentials
+
+logger = logging.getLogger(__name__)
+
+_CONNECTION_ERROR_MSG = "Could not reach DataRobot. Check your network connection and ensure VPN is connected, then try again."
+_AUTH_ERROR_MSG = (
+    "DataRobot API authentication failed. Your API token may be expired or invalid. "
+    "Update DATAROBOT_API_TOKEN in your .env and try again."
+)
 
 
 def suppress_keyboard_interrupt_traceback(
@@ -83,10 +94,19 @@ if __name__ == "__main__":
             (os.path.join(app_dir, "resources"), "app.resources"),
         ],
         transport="streamable-http",
+        load_native_mcp_tools=True,
     )
 
     try:
         server.run(show_banner=True)
+    except requests.exceptions.ConnectionError:
+        logger.error("%s", _CONNECTION_ERROR_MSG)
+        sys.exit(1)
+    except ClientError as e:
+        if e.status_code == 401:
+            logger.error("%s", _AUTH_ERROR_MSG)
+            sys.exit(1)
+        raise
     except KeyboardInterrupt:
         # Exit cleanly on Ctrl+C without showing traceback
         sys.exit(0)

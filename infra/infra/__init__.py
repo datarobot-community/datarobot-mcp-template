@@ -18,6 +18,7 @@ Core and first Pulumi set of resources.
 import os
 from pathlib import Path
 
+from datarobot_pulumi_utils.pulumi.stack import PROJECT_NAME
 import pulumi
 import pulumi_datarobot as datarobot
 
@@ -34,7 +35,7 @@ if use_case_id := os.environ.get("DATAROBOT_DEFAULT_USE_CASE"):
     )
 else:
     use_case = datarobot.UseCase(
-        resource_name=f"FastMCP Template [{project_dir.name}]",
+        resource_name=f"FastMCP Template [{PROJECT_NAME}]",
         description="""This is an amazing application template that does wonderful things.
   * Feature 1
 """,

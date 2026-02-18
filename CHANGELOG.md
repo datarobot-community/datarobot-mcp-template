@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased Changes
 
+## 11.5.0
+- Upgrade to latest gen ai drmcp to >=0.4.2
+- Add DR CLI support
+- Add new integration tools:
+    - gdrive
+    - microsoft_graph
+    - jira
+    - confluence
+    - perplexity
+    - tavily
+
 ## 11.4.0
 - Upgrade gen ai drmcp to 0.1.71 version
 - Upgrade core libraries

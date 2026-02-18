@@ -42,6 +42,24 @@ runtimeParameterDefinitions:
     type: string
   - fieldName: enable_predictive_tools
     type: boolean
+  - fieldName: enable_jira_tools
+    type: boolean
+  - fieldName: enable_confluence_tools
+    type: boolean
+  - fieldName: enable_gdrive_tools
+    type: boolean
+  - fieldName: enable_microsoft_graph_tools
+    type: boolean
+  - fieldName: enable_perplexity_tools
+    type: boolean
+  - fieldName: enable_tavily_tools
+    type: boolean
+  - fieldName: is_atlassian_oauth_provider_configured
+    type: boolean
+  - fieldName: is_google_oauth_provider_configured
+    type: boolean
+  - fieldName: is_microsoft_oauth_provider_configured
+    type: boolean
   - fieldName: SESSION_SECRET_KEY
     type: credential
     credentialType: api_token
