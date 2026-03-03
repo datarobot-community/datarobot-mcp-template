@@ -13,6 +13,12 @@ vars:
       fi
 
 tasks:
+  load-and-save-mcp-item-metadata:
+    desc: "Load and save MCP item metadata"
+    cmds:
+      - echo "🔧 Loading and saving MCP item metadata.."
+      - "{{.UV_CMD}} sync --all-extras"
+      - "{{.UV_CMD}} run dev_tools/lineage/cli.py load-and-save-mcp-item-metadata"
   install:
     desc: "🔧 Install dependencies"
     cmds:
@@ -162,11 +168,13 @@ tasks:
 
   unit:
     desc: "Run unit tests"
+    vars:
+      TEST_PATH: app/tests/unit/ tests/units/
     cmds:
       - rm -rf .coverage .coverage.xml htmlcov
       - echo "Running unit tests"
       - >-
-        {{.UV_CMD}} sync --all-extras && {{.UV_CMD}} run pytest {{if .CLI_ARGS}}{{.CLI_ARGS}}{{else}}app/tests/unit/{{end}}
+        {{.UV_CMD}} sync --all-extras && {{.UV_CMD}} run pytest {{if .CLI_ARGS}}{{.CLI_ARGS}}{{else}}{{.TEST_PATH}}{{end}}
         --cov=app --cov-report=xml --cov-report=html --cov-report=term-missing -s -vv
     silent: true
 

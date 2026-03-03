@@ -17,6 +17,11 @@ root:
     default: "[DataRobot] Python 3.11 GenAI Agents"
     optional: true
     help: "Enter the default execution environment for the MCP server."
+  - env: DATAROBOT_DEFAULT_MCP_EXECUTION_ENVIRONMENT_VERSION_ID
+    type: string
+    default: "69417fa8b1ce07076dca7611"
+    optional: true
+    help: "Enter the default execution environment version ID for the MCP server."
   - key: enabled_tools
     env: MCP_CLI_CONFIGS
     multiple: true

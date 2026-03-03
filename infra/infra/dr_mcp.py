@@ -20,6 +20,7 @@ from typing import Sequence, Final
 import pulumi
 import pulumi_datarobot
 import datarobot as dr
+from datarobot_pulumi_utils.pulumi import resolve_execution_environment_version
 from datarobot_pulumi_utils.pulumi.stack import PROJECT_NAME
 from datarobot_pulumi_utils.schema.exec_envs import RuntimeEnvironments
 
@@ -196,27 +197,17 @@ def get_deployments_app_files(
 
 # Start of Pulumi settings and application infrastructure
 _dr_exec_env = os.environ.get("DATAROBOT_DEFAULT_MCP_EXECUTION_ENVIRONMENT", "").strip()
-if _dr_exec_env:
+if len(_dr_exec_env) > 0:
     # Get the default execution environment from environment variable
     execution_environment_id = _dr_exec_env
     if DEFAULT_EXECUTION_ENVIRONMENT in execution_environment_id:
         pulumi.info("Using default GenAI Agentic Execution Environment.")
         execution_environment_id = RuntimeEnvironments.PYTHON_311_GENAI_AGENTS.value.id
 
-    # Get the pinned version ID if provided (empty or whitespace = use latest)
-    _dr_exec_env_version = os.environ.get(
-        "DATAROBOT_DEFAULT_MCP_EXECUTION_ENVIRONMENT_VERSION_ID", ""
-    ).strip()
-    execution_environment_version_id = (
-        _dr_exec_env_version if _dr_exec_env_version else None
+    execution_environment_version_id = resolve_execution_environment_version(
+        execution_environment_id,
+        "DATAROBOT_DEFAULT_MCP_EXECUTION_ENVIRONMENT_VERSION_ID",
     )
-    if execution_environment_version_id and not re.match(
-        "^[a-f\d]{24}$", execution_environment_version_id
-    ):
-        pulumi.info(
-            "No valid execution environment version ID provided, using latest version."
-        )
-        execution_environment_version_id = None
 
     pulumi.info(
         "Using existing execution environment: "

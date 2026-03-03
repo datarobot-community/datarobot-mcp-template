@@ -20,39 +20,34 @@ tasks:
     cmds:
       - task --list --sort none
     silent: true
+
   lint:
-    desc: "Run linters"
+    desc: "🧹 Run linters"
     cmds:
       - task: dr_mcp:lint
       - task: infra:lint
+
   install:
-    desc: "Install dependencies"
+    desc: "🛠️ Install dependencies"
     cmds:
       - task: dr_mcp:install
       - task: infra:install
+
   test:
-    desc: "Run tests"
+    desc: "🧪 Run tests"
     cmds:
       - task: dr_mcp:test
+
   dev:
     desc: "🚀 Run all services together"
     cmds:
-      - |
-        task dr_mcp:dev &
-        sleep 8
-        echo "✅ All started!"
-        if [[ -n "$NOTEBOOK_ID" ]]; then
-          prefix="${DATAROBOT_API_ENDPOINT//api\/v2/}notebook-sessions/$NOTEBOOK_ID/ports/"
-        else
-          prefix="http://localhost:"
-        fi
-        wait
+      - task dr_mcp:dev
 
   deploy:
     desc: "🚀 Deploy all services"
     cmds:
       - task: install
-      - task infra:deploy
+      - task: infra:deploy
 
   refresh:
     desc: "⚪️ Run Pulumi refresh"

@@ -1,11 +1,11 @@
 [project]
 
 name = "dr_mcp"
-version = "11.5.0"
+version = "11.6.0"
 description = "DataRobot MCP Server"
-requires-python = ">=3.11"
+requires-python = ">=3.11, <3.14"
 dependencies = [
-    "datarobot-genai[drmcp]>=0.4.2,<0.5.0",
+    "datarobot-genai[drmcp]>=0.5.12,<0.6.0",
 ]
 
 [project.optional-dependencies]
@@ -18,6 +18,7 @@ dev = [
     "pytest-asyncio>=0.23.5",
     "pre-commit>=3.6.0",
     "types-requests>=2.31.0",
+    "click>=8.3.0",
 ]
 # Additional dependencies required to run the agent in DataRobot Agentic playground
 agentic_playground = [

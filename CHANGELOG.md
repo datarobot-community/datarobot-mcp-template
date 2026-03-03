@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased Changes
 
+## 11.6.0
+- Upgrade datarobot-genai[drmcp] to >=0.5.12,<0.6.0
+- Constrain Python to >=3.11,<3.14
+- Add dev tools lineage: CLI `load-and-save-mcp-item-metadata` to export MCP tools, prompts, and resources metadata to YAML
+- Add Taskfile task `load-and-save-mcp-item-metadata` and unit tests for lineage (entities, utils, CLI)
+- Improve port-in-use handling: check before start and show user-friendly message with `lsof`/`kill` hints when MCP server port is already in use
+- Add DR CLI options: "Register DataRobot dynamic tools on startup" and "Register DataRobot dynamic prompts on startup" (dynamic_tools, dynamic_prompts)
+- Infra: use `resolve_execution_environment_version` from datarobot_pulumi_utils for execution environment version resolution
+- Add infra tests for dr_mcp Pulumi module
+- Taskfile: emoji in task descriptions; simplify dev task; deploy task uses DeployComponents list
+- Template updates from af-component-datarobot-mcp and base (answers/drmcp-dr_mcp.yml, answers/base.yml)
+- Add click>=8.3.0 for dev (lineage CLI)
+
 ## 11.5.0
 - Upgrade to latest gen ai drmcp to >=0.4.2
 - Add DR CLI support

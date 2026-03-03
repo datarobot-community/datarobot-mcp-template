@@ -10,7 +10,7 @@ requires-python = ">=3.11, <3.14"
 
 dependencies = [
     "datarobot>=3.8.2",
-    "datarobot-pulumi-utils>=0.1.0",
+    "datarobot-pulumi-utils>=0.1.2",
     "litellm>=1.72.1",
     "pulumi>=3.175.0",
     "pulumi-datarobot>=0.10.27",

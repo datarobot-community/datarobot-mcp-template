@@ -82,7 +82,7 @@ DATAROBOT_ENDPOINT=your_datarobot_endpoint
 To start the MCP server locally for development:
 
 ```bash
-task task local-dev
+task dev
 ```
 
 This command will:
@@ -277,7 +277,7 @@ uv run pytest -v
 
 Monitor the MCP server logs to debug issues:
 
-- **Local Development**: Logs are output to the console where you ran `task local-dev`
+- **Local Development**: Logs are output to the console where you ran `task dev`
 - **Deployed Server**: Check the DataRobot deployment logs in the DataRobot UI
 
 ### Common Issues

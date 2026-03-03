@@ -21,8 +21,9 @@ tasks:
     silent: true
 
   {{- if .HasLint }}
+
   lint:
-    desc: "Run linters"
+    desc: "🧹 Run linters"
     cmds:
       {{- range .LintComponents }}
       - task: {{ . }}:lint
@@ -30,8 +31,9 @@ tasks:
   {{- end }}
 
   {{- if .HasInstall }}
+
   install:
-    desc: "Install dependencies"
+    desc: "🛠️ Install dependencies"
     cmds:
       {{- range .InstallComponents }}
       - task: {{ . }}:install
@@ -39,8 +41,9 @@ tasks:
   {{- end }}
 
   {{- if .HasTest }}
+
   test:
-    desc: "Run tests"
+    desc: "🧪 Run tests"
     cmds:
       {{- range .TestComponents }}
       - task: {{ . }}:test
@@ -48,28 +51,23 @@ tasks:
   {{- end }}
 
   {{- if .HasDev }}
+
   dev:
     desc: "🚀 Run all services together"
     cmds:
-      - |
-        {{- range .DevComponents }}
-        task {{ . }}:dev &
-        {{- end }}
-        sleep 8
-        echo "✅ All started!"
-        if [[ -n "$NOTEBOOK_ID" ]]; then
-          prefix="${DATAROBOT_API_ENDPOINT//api\/v2/}notebook-sessions/$NOTEBOOK_ID/ports/"
-        else
-          prefix="http://localhost:"
-        fi
-        wait
+      - task {{ index .DevComponents 0 }}:dev
   {{- end }}
+
+  {{- if .HasDeploy }}
 
   deploy:
     desc: "🚀 Deploy all services"
     cmds:
       - task: install
-      - task infra:deploy
+      {{- range .DeployComponents }}
+      - task: {{ . }}:deploy
+      {{- end }}
+  {{- end }}
 
   refresh:
     desc: "⚪️ Run Pulumi refresh"
