@@ -27,6 +27,7 @@ root:
     multiple: true
     help: "Select which tool integrations and features to enable (space to toggle, enter to confirm)."
     default: "predictive,gdrive,microsoft_graph"
+    always_prompt: true
     options:
       - name: "Enable Predictive tools"
         value: "predictive"

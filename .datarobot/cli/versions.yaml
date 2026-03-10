@@ -1,0 +1,21 @@
+---
+dr:
+  name: DataRobot CLI
+  minimum-version: 0.2.50
+  command: dr self version
+  url: https://github.com/datarobot-oss/cli
+uv:
+  name: uv Python package manager
+  minimum-version: 0.9.0
+  command: uv self version
+  url: https://docs.astral.sh/uv/getting-started/installation/
+task:
+  name: Taskfile task runner
+  minimum-version: 3.43.3
+  command: task --version
+  url: https://taskfile.dev/
+pulumi:
+  name: Pulumi Infrastructure as Code tool
+  minimum-version: 3.163.0
+  command: pulumi version
+  url: https://www.pulumi.com/

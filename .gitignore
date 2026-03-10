@@ -184,4 +184,5 @@ temp.txt
 #  .dr/state contains user-specific history and audit-trail while working with the CLI
 .datarobot/state/
 Taskfile.gen.yaml
+pulumi_config.json
 .datarobot/cli/state.yaml

@@ -235,8 +235,18 @@ else:
 
 
 def _parse_mcp_cli_enabled_set() -> set[str] | None:
-    raw = os.getenv("MCP_CLI_CONFIGS", "").strip()
-    return {s.strip().lower() for s in raw.split(",") if s.strip()} if raw else None
+    """Parse MCP_CLI_CONFIGS for deployment runtime params.
+
+    - Not set → None (use defaults for each option).
+    - Set but empty → empty set (user disabled all; all options false).
+    - Set and non-empty → set of enabled option names (e.g. {'predictive', 'gdrive'}).
+    """
+    if "MCP_CLI_CONFIGS" not in os.environ:
+        return None
+    raw = os.environ["MCP_CLI_CONFIGS"].strip() if os.environ["MCP_CLI_CONFIGS"] else ""
+    if not raw:
+        return set()
+    return {s.strip().lower() for s in raw.split(",") if s.strip()}
 
 
 _mcp_cli_enabled_set: set[str] | None = _parse_mcp_cli_enabled_set()

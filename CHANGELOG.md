@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased Changes
 
+## 11.6.1
+  - Updated `dr_mcp` component from 0.0.13 to 0.0.15:
+  - Fix loading JSON schemas from the package directory in DRUM adapter to work from wheel or source
+  - Fix dynamic tool deployment registration to filter deployments with tool tag name and value using strict AND logic
+  - Fix configuration parsing to correctly disable predictive tools when MCP_CLI_CONFIGS is empty
+  - Added always_prompt option to the MCP CLI config
+  
 ## 11.6.0
 - Upgrade datarobot-genai[drmcp] to >=0.5.12,<0.6.0
 - Constrain Python to >=3.11,<3.14
