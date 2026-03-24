@@ -17,7 +17,6 @@ tasks:
     desc: "Load and save MCP item metadata"
     cmds:
       - echo "🔧 Loading and saving MCP item metadata.."
-      - "{{.UV_CMD}} sync --all-extras"
       - "{{.UV_CMD}} run dev_tools/lineage/cli.py load-and-save-mcp-item-metadata"
   install:
     desc: "🔧 Install dependencies"
@@ -25,6 +24,7 @@ tasks:
       - echo "🔧 Installing dependencies.."
       - "{{.UV_CMD}} sync --all-extras"
       - task: generate-docker-requirement-file
+      - task: load-and-save-mcp-item-metadata
     silent: true
 
   dev:

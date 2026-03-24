@@ -19,14 +19,15 @@ root:
     help: "Enter the default execution environment for the MCP server."
   - env: DATAROBOT_DEFAULT_MCP_EXECUTION_ENVIRONMENT_VERSION_ID
     type: string
-    default: "69417fa8b1ce07076dca7611"
+    default: "69b3e80b0cc7f2df95d75cea"
     optional: true
     help: "Enter the default execution environment version ID for the MCP server."
   - key: enabled_tools
     env: MCP_CLI_CONFIGS
     multiple: true
     help: "Select which tool integrations and features to enable (space to toggle, enter to confirm)."
-    default: "predictive,gdrive,microsoft_graph"
+    default: ""
+    optional: true
     always_prompt: true
     options:
       - name: "Enable Predictive tools"

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased Changes
 
+## 11.6.2
+  - Infra: raise minimum `litellm` to `>=1.74.9` (addresses CVE-2025-45809 for proxy `/key/block`)
+  - DR CLI (`dr_mcp.yaml`): set `MCP_CLI_CONFIGS` multiselect to `optional: true` so Enter works with no selections
+
 ## 11.6.1
   - Updated `dr_mcp` component from 0.0.13 to 0.0.15:
   - Fix loading JSON schemas from the package directory in DRUM adapter to work from wheel or source

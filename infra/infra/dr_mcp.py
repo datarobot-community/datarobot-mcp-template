@@ -23,6 +23,10 @@ import datarobot as dr
 from datarobot_pulumi_utils.pulumi import resolve_execution_environment_version
 from datarobot_pulumi_utils.pulumi.stack import PROJECT_NAME
 from datarobot_pulumi_utils.schema.exec_envs import RuntimeEnvironments
+from dev_tools.lineage.pulumi_managers import MCPToolMetadataPulumiManager
+from dev_tools.lineage.pulumi_managers import MCPPromptMetadataPulumiManager
+from dev_tools.lineage.pulumi_managers import MCPResourceMetadataPulumiManager
+from dev_tools.lineage.utils import is_lineage_feature_enabled
 
 from . import project_dir, use_case
 
@@ -598,3 +602,46 @@ mcp_custom_model_runtime_parameters: list[
         value=deployment.id.apply(lambda id: f"{id}"),
     )
 ]
+
+
+if is_lineage_feature_enabled():
+    mcp_tool_metadata_pulumi_manager = MCPToolMetadataPulumiManager()
+    mcp_tool_metadata_entities = mcp_tool_metadata_pulumi_manager.load_metadata()
+    mcp_tool_metadata_pulumi_resources = (
+        mcp_tool_metadata_pulumi_manager.create_pulumi_resources(
+            mcp_tool_metadata_entities,
+            mcp_server_asset_name,
+            custom_model.version_id,
+        )
+    )
+    mcp_tool_metadata_pulumi_manager.export_to_pulumi_stack(
+        mcp_tool_metadata_pulumi_resources
+    )
+
+    mcp_prompt_metadata_pulumi_manager = MCPPromptMetadataPulumiManager()
+    mcp_prompt_metadata_entities = mcp_prompt_metadata_pulumi_manager.load_metadata()
+    mcp_prompt_metadata_pulumi_resources = (
+        mcp_prompt_metadata_pulumi_manager.create_pulumi_resources(
+            mcp_prompt_metadata_entities,
+            mcp_server_asset_name,
+            custom_model.version_id,
+        )
+    )
+    mcp_prompt_metadata_pulumi_manager.export_to_pulumi_stack(
+        mcp_prompt_metadata_pulumi_resources
+    )
+
+    mcp_resource_metadata_pulumi_manager = MCPResourceMetadataPulumiManager()
+    mcp_resource_metadata_entities = (
+        mcp_resource_metadata_pulumi_manager.load_metadata()
+    )
+    mcp_resource_metadata_pulumi_resources = (
+        mcp_resource_metadata_pulumi_manager.create_pulumi_resources(
+            mcp_resource_metadata_entities,
+            mcp_server_asset_name,
+            custom_model.version_id,
+        )
+    )
+    mcp_resource_metadata_pulumi_manager.export_to_pulumi_stack(
+        mcp_resource_metadata_pulumi_resources
+    )

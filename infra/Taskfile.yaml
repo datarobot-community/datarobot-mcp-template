@@ -20,7 +20,7 @@ vars:
       if [ -n "${PULUMI_DATAROBOT_PLUGIN_VERSION:-}" ]; then
         echo "${PULUMI_DATAROBOT_PLUGIN_VERSION}"
       else
-        echo "v0.10.27"
+        echo "v0.10.30"
       fi
 
   PULUMI_DATAROBOT_DEFAULT_URL:
@@ -31,7 +31,7 @@ vars:
       if [ -n "${PULUMI_DATAROBOT_DEFAULT_URL:-}" ]; then
         echo "${PULUMI_DATAROBOT_DEFAULT_URL}"
       else
-        echo "https://github.com/datarobot-community/pulumi-datarobot/releases/download/v0.10.27"
+        echo "https://github.com/datarobot-community/pulumi-datarobot/releases/download/v0.10.30"
       fi
   # Cross-platform environment cleaning - uses 'env -u' on Unix systems, falls back to empty string on Windows
   UV_CMD:
@@ -192,3 +192,19 @@ tasks:
       - echo "📜 Checking license headers"
       - docker run  --rm -v $PWD:/github/workspace ghcr.io/apache/skywalking-eyes/license-eye:eb0e0b091ea41213f712f622797e37526ca1e5d6
         -v info -c .licenserc.yaml header check
+
+  unit:
+    desc: "Run unit tests"
+    vars:
+      TEST_PATH: tests/units/
+    cmds:
+      - |
+        if [ ! -d {{.TEST_PATH}} ]; then
+          echo "Skipping unit tests ({{.TEST_PATH}} not found)"
+          exit 0
+        fi
+        rm -rf .coverage .coverage.xml coverage.xml htmlcov
+        echo "Running unit tests"
+        {{.UV_CMD}} sync --all-extras && {{.UV_CMD}} run pytest {{if .CLI_ARGS}}{{.CLI_ARGS}}{{else}}{{.TEST_PATH}}{{end}} \
+          --cov=infra --cov-report=xml --cov-report=html --cov-report=term-missing -s -vv
+    silent: true
