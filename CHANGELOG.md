@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased Changes
 
+## 11.8.0
+- Upgraded MCP `datarobot-genai` from 0.15.2 to 0.15.32
+  - Improved predictive drtools for MCP agents: rich tool_metadata descriptions, robust batch download polling and async-safe waits, safer CSV/JSON parsing for realtime predict, and more resilient deployment CSV validation (importance + whitespace/empty rows).
+  - Categorized ToolErrors, OAuth access tokens with x-datarobot-*-access-token fallback, MCP logging that surfaces kinds to FastMCP, SDK ClientError → tool errors in predictive tools and improved third party APIs tool_metadata descriptions.
+  - Implemented pagination for predictive data MCP tools.
+  - Improved MCP lineage sync logic and made it always run during user MCP startup.
+  - Implemented pagination for predictive model MCP tool.
+
+- **Recipe vs base scaffolding are separate now (#115, APP-5614).** Before, one upstream “base” package carried both generic app defaults and recipe-specific pieces. Now the template uses two upstream inputs: **base** (shared DataRobot app defaults) and **datarobot-recipe** (recipe-specific defaults). That split required updating how answers are wired in and a few follow-up corrections.
+- **MCP / `dr_mcp` template brought up to date (#114, #116, #120).** The files that come from the community MCP component (`af-component-datarobot-mcp`), including the snapshot under `.datarobot/answers/drmcp-dr_mcp.yml`, were refreshed to match that repo. #120 also adds template files that were supposed to ship with an earlier refresh but were missing.
+- **Default answer files refreshed (#113, #117, #118, #119).** The checked-in defaults under `.datarobot/answers/` (`base.yml`, `datarobot_recipe.yml`, and related bumps) were updated to the same versions as the current `af-component-base` (and matching recipe answer) sources, so a new copy of this template starts with those up-to-date defaults.
+
 ## 11.6.2
   - Infra: raise minimum `litellm` to `>=1.74.9` (addresses CVE-2025-45809 for proxy `/key/block`)
   - DR CLI (`dr_mcp.yaml`): set `MCP_CLI_CONFIGS` multiselect to `optional: true` so Enter works with no selections

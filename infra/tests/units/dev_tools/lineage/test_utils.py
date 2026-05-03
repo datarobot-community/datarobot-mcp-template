@@ -17,6 +17,7 @@ from typing import Iterator
 from unittest.mock import Mock
 from unittest.mock import patch
 
+from datarobot.errors import ClientError
 from dev_tools.lineage.utils import is_lineage_feature_enabled
 
 
@@ -39,3 +40,14 @@ def test_is_lineage_feature_enabled(mock_fetch_flag_statuses: Mock) -> None:
 
     mock_fetch_flag_statuses.assert_called_once_with([expected_feature_flag])
     assert output == flag_enablement
+
+
+def test_is_lineage_feature_enabled_return_false_if_raise_error(
+    mock_fetch_flag_statuses: Mock,
+) -> None:
+    expected_feature_flag = "ENABLE_MCP_TOOLS_GALLERY_SUPPORT"
+    mock_fetch_flag_statuses.side_effect = ClientError(Mock(), Mock())
+    output = is_lineage_feature_enabled()
+
+    mock_fetch_flag_statuses.assert_called_once_with([expected_feature_flag])
+    assert output is False

@@ -1,4 +1,4 @@
-# Copyright 2025 DataRobot, Inc.
+# Copyright 2026 DataRobot, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -561,12 +561,22 @@ registerd_model = pulumi_datarobot.RegisteredModel(
 )
 
 # Where to run the custom model
-base_prediction_environment = pulumi_datarobot.PredictionEnvironment(
-    resource_name=mcp_server_asset_name + " Prediction Environment",
-    name=mcp_server_asset_name,
-    platform=dr.enums.PredictionEnvironmentPlatform.DATAROBOT_SERVERLESS,
-    opts=pulumi.ResourceOptions(retain_on_delete=False),
-)
+if prediction_environment_id := os.environ.get(
+    "DATAROBOT_DEFAULT_PREDICTION_ENVIRONMENT"
+):
+    pulumi.info(f"Using existing prediction environment '{prediction_environment_id}'")
+
+    base_prediction_environment = pulumi_datarobot.PredictionEnvironment.get(
+        id=prediction_environment_id,
+        resource_name=mcp_server_asset_name + " Prediction Environment [PRE-EXISTING]",
+    )
+else:
+    base_prediction_environment = pulumi_datarobot.PredictionEnvironment(
+        resource_name=mcp_server_asset_name + " Prediction Environment",
+        name=mcp_server_asset_name,
+        platform=dr.enums.PredictionEnvironmentPlatform.DATAROBOT_SERVERLESS,
+        opts=pulumi.ResourceOptions(retain_on_delete=False),
+    )
 
 # Deploy the registered custom model
 deployment = pulumi_datarobot.Deployment(
