@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased Changes
 
+## 11.9.0
+- Upgraded MCP library `datarobot-genai[drmcp]` (see [datarobot-genai CHANGELOG](https://github.com/datarobot-oss/datarobot-genai/blob/main/CHANGELOG.md) for full release notes). MCP-relevant changes since **0.15.32** (the version noted in 11.8.0):
+  - **0.15.49** — Predictive tool `is_eligible_for_timeseries_training`: richer cadence and data-quality signals, clearer errors (what / why / fix), duplicate-row detection, and scoring-dataset handling when the target is all-null.
+  - **0.15.48** — New vector-database MCP tools: `list_vector_databases` and `query_vector_database`, implemented with `tool_metadata` and plain dict returns in drtools.
+  - **0.15.45** — Predictive batch scoring as submit-and-poll: `predict_by_ai_catalog` / `predict_from_project_data` return job metadata early; new `get_batch_prediction_job_status`; `get_batch_prediction_results` with configurable download timeouts; `get_exploratory_insights` optional catalog-backed column profile and histogram; realtime predict tool docs updated for the batch flow.
+
 ## 11.8.0
 - Upgraded MCP `datarobot-genai` from 0.15.2 to 0.15.32
   - Improved predictive drtools for MCP agents: rich tool_metadata descriptions, robust batch download polling and async-safe waits, safer CSV/JSON parsing for realtime predict, and more resilient deployment CSV validation (importance + whitespace/empty rows).

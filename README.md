@@ -39,6 +39,9 @@
   <a href="https://www.python.org/">
     <img src="https://img.shields.io/badge/python-3.11+-blue.svg" alt="Python">
   </a>
+  <a href="https://join.slack.com/t/datarobot-community/shared_invite/zt-3uzfp8k50-SUdMqeux25ok9_5wr4okrg">
+    <img src="https://img.shields.io/badge/%23applications-a?label=Slack&labelColor=30373D&color=81FBA6" alt="Slack #applications">
+  </a>
 </p>
 
 This repository provides a production-ready template for building [FastMCP](https://github.com/jlowin/fastmcp) servers with DataRobot integration.

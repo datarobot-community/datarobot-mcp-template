@@ -9,6 +9,10 @@ on:
 jobs:
   python-checks:
     runs-on: ubuntu-latest
+    # orgoro/coverage@v3.3+ requires these for PR comments (see action README / v3.3 release notes).
+    permissions:
+      contents: read
+      pull-requests: write
     strategy:
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
@@ -50,7 +54,7 @@ jobs:
 
       - name: Get Cover
         if: steps.run_unit_tests.outputs.coverage_report_exists == 'true' && github.event_name == 'pull_request'
-        uses: orgoro/coverage@v3.2
+        uses: orgoro/coverage@v3.3
         with:
           coverageFile: infra/coverage.xml
           token: ${{ secrets.GITHUB_TOKEN }}
