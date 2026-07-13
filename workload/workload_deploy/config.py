@@ -115,9 +115,9 @@ def build_environment_vars(env: Mapping[str, str] | None = None) -> list[dict[st
         val = e.get(name) or default
         out[name] = val
     for name in _PASSTHROUGH_ENV:
-        val = e.get(name)
-        if val:
-            out[name] = val
+        passthrough_val = e.get(name)
+        if passthrough_val:
+            out[name] = passthrough_val
     for name in _NEVER_ENV:
         out.pop(name, None)
     return [{"name": k, "value": v} for k, v in out.items()]
