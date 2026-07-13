@@ -13,6 +13,11 @@ includes:
   infra:
     taskfile: ./infra/Taskfile.yaml
     dir: ./infra
+  workload:
+    taskfile: ./workload/Taskfile.yaml
+    dir: ./workload
+    env:
+      PARENT_ENV: '{{.PARENT_ENV}}'
 
 tasks:
   default:
@@ -61,4 +66,23 @@ tasks:
     cmds:
       - echo "Running pulumi destroy"
       - task infra:destroy
+    silent: true
+
+  deployasworkload:
+    desc: "🟢 Deploy MCP via the Workload API (build-on-demand, no Pulumi)"
+    cmds:
+      - task: workload:install
+      - task: workload:deploy
+    silent: true
+
+  destroyworkload:
+    desc: "🔴 Destroy the MCP workload + artifact"
+    cmds:
+      - task workload:destroy -- {{.CLI_ARGS}}
+    silent: true
+
+  workloadlogs:
+    desc: "📜 Runtime OTel logs for the MCP workload"
+    cmds:
+      - task workload:logs -- {{.CLI_ARGS}}
     silent: true
