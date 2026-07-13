@@ -57,6 +57,7 @@ The template includes pre-built tools for common DataRobot operations, a structu
 - [Prerequisites](#prerequisites)
 - [Get started](#getting-started)
 - [Deployment](#deployment)
+- [Documentation](#documentation)
 - [Next steps](#next-steps)
 - [Advanced options](#advanced-options)
 - [Get help](#get-help)
@@ -368,13 +369,28 @@ task destroy
 
 Use the `MCP_SERVER_MCP_ENDPOINT` URL (shown in the **outputs** section in the screenshot above) to connect your MCP clients to the deployed server.
 
+# Documentation
+
+MCP server guides ship with the template under [`docs/datarobot-mcp/`](docs/datarobot-mcp/README.md):
+
+| Document | Description |
+|---|---|
+| [Overview](docs/datarobot-mcp/README.md) | Getting started, local dev, and deployment overview |
+| [MCP client setup](docs/datarobot-mcp/mcp_client_setup.md) | Configure Cursor, VS Code, and Claude Desktop |
+| [Server architecture](docs/datarobot-mcp/mcp_server_architecture.md) | Project structure and configuration reference |
+| [Dynamic tool registration](docs/datarobot-mcp/dynamic_tool_registration.md) | Turn DataRobot deployments into tools automatically |
+| [Custom tools](docs/datarobot-mcp/custom_tools.md) | Author domain-specific tools |
+| [Deployment info tools](docs/datarobot-mcp/deployment_info_tools.md) | Query deployment features and build prediction datasets |
+
+App Framework scaffolding docs (base component, infra layout) are in [`docs/base.md`](docs/base.md).
+
 # Next steps
 
-- [Configure your MCP client](/docs/mcp_client_setup.md) for instructions on connecting Cursor, VSCode, or Claude Desktop.
-- [Develop custom tools](/docs/custom_tools.md) for instructions on adding custom tools to the server.
-- See [MCP server architecture](/docs/mcp_server_architecture.md) for a detailed overview of the server architecture.
+- [Configure your MCP client](docs/datarobot-mcp/mcp_client_setup.md) for instructions on connecting Cursor, VSCode, or Claude Desktop.
+- [Develop custom tools](docs/datarobot-mcp/custom_tools.md) for instructions on adding custom tools to the server.
+- See [MCP server architecture](docs/datarobot-mcp/mcp_server_architecture.md) for a detailed overview of the server architecture.
 - [Advanced options](#advanced-options) for debugging, testing, and further customization.
-- Read more about [dynamic tool registration](/docs/dynamic_tool_registration.md) for instructions on automatically registering tools with the server.
+- Read more about [dynamic tool registration](docs/datarobot-mcp/dynamic_tool_registration.md) for instructions on automatically registering tools with the server.
 
 # Advanced options
 
@@ -410,37 +426,34 @@ MCP_RECIPE_RUNTIME_PARAMETERS = [
 ]
 ```
 
-### dr_mcp/user-metadata.yaml
-
-Add your custom runtime parameters to the schema:
-
-```yaml
-runtimeParameterDefinitions:
-  - fieldName: user_name
-    type: string
-  # Add your custom runtime parameters here
-```
-
 ### dr_mcp/app/core/user_config.py
 
-Update the parameter handling:
+Add matching fields to read runtime parameters at runtime. `DataRobotAppFrameworkBaseSettings` loads values automatically from deployment runtime parameters (`MLOPS_RUNTIME_PARAM_*`), `.env`, and `pulumi_config.json`:
 
 ```python
-class UserAppConfig(BaseSettings):
+from typing import Optional
+
+from datarobot.core.config import DataRobotAppFrameworkBaseSettings
+
+
+class UserAppConfig(DataRobotAppFrameworkBaseSettings):
     """User-specific application configuration."""
 
-    # Example of adding user-specific configuration
-    user_name: str = Field(
-        default="default-user",
-        validation_alias=AliasChoices(
-            RUNTIME_PARAM_ENV_VAR_NAME_PREFIX + "USER_NAME",
-            "USER_NAME",
-        ),
-        description="Name of the user account in use.",
-    )
+    user_name: str = "default-user"
+
+
+_user_config: Optional[UserAppConfig] = None
+
+
+def get_user_config() -> UserAppConfig:
+    """Get the global user configuration instance."""
+    global _user_config
+    if _user_config is None:
+        _user_config = UserAppConfig()
+    return _user_config
 ```
 
-These parameters will be available as environment variables in the deployed server and can be accessed through the `get_user_config()` function.
+Access configuration in your app via `get_user_config()` (for example, `get_user_config().user_name`).
 
 ## Debugging
 
@@ -494,7 +507,7 @@ task dev
 
 If you encounter issues or have questions:
 
-- **Check Documentation**: Review the guides in `/docs/`
+- **Check Documentation**: Review the guides in [`docs/datarobot-mcp/`](docs/datarobot-mcp/README.md)
 - **FastMCP Documentation**: [GitHub Repository](https://github.com/jlowin/fastmcp)
 - **MCP Protocol**: [Model Context Protocol Specification](https://modelcontextprotocol.io/)
 - **DataRobot Support**: [Contact Support](https://docs.datarobot.com/en/docs/get-started/troubleshooting/general-help.html)
