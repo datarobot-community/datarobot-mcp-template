@@ -1,0 +1,25 @@
+[project]
+name = "workload_deploy"
+version = "0.0.1"
+description = "Deploy the MCP server as a DataRobot Workload via the Workload API (pure REST)."
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=6.2.1",
+    "responses>=0.25.8",
+    "ruff>=0.3.0",
+    "mypy>=1.8.0",
+    "types-requests>=2.31",
+]
+
+[build-system]
+requires = ["hatchling>=1.18.0"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
