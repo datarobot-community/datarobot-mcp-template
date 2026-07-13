@@ -248,3 +248,6 @@ Taskfile.gen.yaml
 .datarobot/cli/state.yaml
 
 .history/
+
+# macOS
+.DS_Store
