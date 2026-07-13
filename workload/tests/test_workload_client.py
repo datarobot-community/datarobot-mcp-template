@@ -78,3 +78,57 @@ def test_wait_for_build_times_out():
             "art1", "b1", timeout_s=30, interval_s=0,
             sleep=lambda _s: None, now=lambda: next(clock),
         )
+
+
+@responses.activate
+def test_create_workload_payload_and_id():
+    responses.post(f"{BASE}/workloads/", json={"id": "wl1", "status": "stopped"}, status=201)
+    c = WorkloadClient(BASE, "tok")
+    wid = c.create_workload(name="mcp", artifact_id="art1", importance="low", replica_count=2)
+    assert wid == "wl1"
+    import json
+    payload = json.loads(responses.calls[0].request.body)
+    assert payload["artifactId"] == "art1"
+    assert payload["importance"] == "low"
+    assert payload["runtime"]["replicaCount"] == 2
+
+
+@responses.activate
+def test_wait_for_workload_running():
+    responses.get(f"{BASE}/workloads/wl1", json={"status": "launching"})
+    responses.get(f"{BASE}/workloads/wl1", json={"status": "running"})
+    status = WorkloadClient(BASE, "tok").wait_for_workload(
+        "wl1", timeout_s=30, interval_s=0, sleep=lambda _s: None
+    )
+    assert status == "running"
+
+
+@responses.activate
+def test_wait_for_workload_errored_raises():
+    responses.get(f"{BASE}/workloads/wl1", json={"status": "errored"})
+    with pytest.raises(RuntimeError):
+        WorkloadClient(BASE, "tok").wait_for_workload(
+            "wl1", timeout_s=30, interval_s=0, sleep=lambda _s: None
+        )
+
+
+@responses.activate
+def test_active_endpoint_prefers_running_proton():
+    responses.get(
+        f"{BASE}/workloads/wl1/protons",
+        json={"data": [
+            {"status": "stopped", "endpoint": "https://old", "role": "candidate"},
+            {"status": "running", "endpoint": "https://x/api/v2/endpoints/workloads/wl1?protonId=p2", "role": "active"},
+        ]},
+    )
+    ep = WorkloadClient(BASE, "tok").active_endpoint("wl1")
+    assert ep.endswith("protonId=p2")
+
+
+@responses.activate
+def test_get_workload_logs_hits_otel_path():
+    responses.get(f"{BASE}/otel/workload/wl1/logs/", json={"data": []})
+    WorkloadClient(BASE, "tok").get_workload_logs("wl1", level="debug", limit=50)
+    req = responses.calls[0].request
+    assert "/otel/workload/wl1/logs/" in req.url
+    assert "level=debug" in req.url

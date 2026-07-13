@@ -20,6 +20,9 @@ import requests
 BUILD_SUCCESS = "COMPLETED"
 BUILD_FAILURES = frozenset({"FAILED", "CANCELLED"})
 
+WORKLOAD_TARGET = "running"
+WORKLOAD_FAILURES = frozenset({"errored", "terminated"})
+
 
 class WorkloadClient:
     def __init__(self, endpoint: str, token: str) -> None:
@@ -125,3 +128,96 @@ class WorkloadClient:
             if now() >= deadline:
                 raise TimeoutError(f"build {build_id} not done after {timeout_s}s (last={status})")
             sleep(interval_s)
+
+    # --- workload lifecycle ---
+
+    def create_workload(
+        self,
+        *,
+        name: str,
+        artifact_id: str,
+        importance: str,
+        replica_count: int,
+        resource_bundle_id: str | None = None,
+    ) -> str:
+        runtime: dict = {"replicaCount": replica_count}
+        if resource_bundle_id:
+            runtime["resourceBundles"] = [resource_bundle_id]
+        payload = {
+            "name": name,
+            "artifactId": artifact_id,
+            "importance": importance,
+            "runtime": runtime,
+        }
+        resp = self._session.post(self._url("/workloads/"), json=payload)
+        resp.raise_for_status()
+        return resp.json()["id"]
+
+    def start_workload(self, workload_id: str) -> None:
+        self._session.post(self._url(f"/workloads/{workload_id}/start")).raise_for_status()
+
+    def stop_workload(self, workload_id: str) -> None:
+        self._session.post(self._url(f"/workloads/{workload_id}/stop")).raise_for_status()
+
+    def delete_workload(self, workload_id: str) -> None:
+        resp = self._session.delete(self._url(f"/workloads/{workload_id}"))
+        if resp.status_code != 404:
+            resp.raise_for_status()
+
+    def delete_artifact(self, artifact_id: str) -> None:
+        resp = self._session.delete(self._url(f"/artifacts/{artifact_id}"))
+        if resp.status_code != 404:
+            resp.raise_for_status()
+
+    def get_workload(self, workload_id: str) -> dict:
+        resp = self._session.get(self._url(f"/workloads/{workload_id}"))
+        resp.raise_for_status()
+        return resp.json()
+
+    def list_protons(self, workload_id: str) -> list[dict]:
+        resp = self._session.get(self._url(f"/workloads/{workload_id}/protons"))
+        resp.raise_for_status()
+        return resp.json().get("data", []) or []
+
+    def get_workload_events(self, workload_id: str) -> list[dict]:
+        resp = self._session.get(self._url(f"/workloads/{workload_id}/events"))
+        resp.raise_for_status()
+        return resp.json().get("data", []) or []
+
+    def get_workload_logs(self, workload_id: str, *, level: str = "info", limit: int = 100) -> dict:
+        params: dict[str, str | int] = {"level": level, "limit": limit}
+        resp = self._session.get(
+            self._url(f"/otel/workload/{workload_id}/logs/"),
+            params=params,
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    def wait_for_workload(
+        self,
+        workload_id: str,
+        *,
+        target: str = WORKLOAD_TARGET,
+        timeout_s: int,
+        interval_s: int,
+        sleep: Callable[[float], None] = time.sleep,
+        now: Callable[[], float] = time.monotonic,
+    ) -> str:
+        deadline = now() + timeout_s
+        while True:
+            status = str(self.get_workload(workload_id).get("status", "")).lower()
+            if status == target:
+                return status
+            if status in WORKLOAD_FAILURES:
+                raise RuntimeError(f"workload {workload_id} entered '{status}'")
+            if now() >= deadline:
+                raise TimeoutError(
+                    f"workload {workload_id} not '{target}' after {timeout_s}s (last={status})"
+                )
+            sleep(interval_s)
+
+    def active_endpoint(self, workload_id: str) -> str | None:
+        protons = self.list_protons(workload_id)
+        running = [p for p in protons if str(p.get("status", "")).lower() == "running"]
+        chosen = running[0] if running else (protons[0] if protons else None)
+        return chosen.get("endpoint") if chosen else None
