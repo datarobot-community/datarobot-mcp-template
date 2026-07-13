@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import pytest
 from workload_deploy.bundle import assemble_bundle
 
@@ -30,7 +29,7 @@ def test_bundle_includes_required_files_and_excludes_junk(tmp_path):
     _write(tmp_path, "pyproject.toml")
     _write(tmp_path, "uv.lock")
     _write(tmp_path, "app/__pycache__/x.pyc")   # excluded
-    _write(tmp_path, "tests/test_x.py")         # excluded
+    _write(tmp_path, "app/tests/test_x.py")    # excluded
     df = _write(tmp_path, "docker/Dockerfile.workload", b"FROM base")
     names = {arc for arc, _ in assemble_bundle(tmp_path, df)}
     assert "Dockerfile" in names
@@ -39,7 +38,7 @@ def test_bundle_includes_required_files_and_excludes_junk(tmp_path):
     assert "app/main.py" in names
     assert "app/tools/user_tools.py" in names
     assert not any(n.endswith(".pyc") for n in names)
-    assert not any(n.startswith("tests/") for n in names)
+    assert "app/tests/test_x.py" not in names
 
 
 def test_bundle_requires_uv_lock(tmp_path):

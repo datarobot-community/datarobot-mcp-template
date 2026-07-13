@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import re
 from pathlib import Path
 
@@ -44,7 +45,7 @@ def _excluded(arcname: str) -> bool:
     return any(p.match(arcname) for p in EXCLUDE_PATTERNS)
 
 
-def assemble_bundle(dr_mcp_dir, dockerfile_path) -> list[tuple[str, bytes]]:
+def assemble_bundle(dr_mcp_dir: str | os.PathLike, dockerfile_path: str | os.PathLike) -> list[tuple[str, bytes]]:
     root = Path(dr_mcp_dir)
     files: list[tuple[str, bytes]] = []
     for item in _INCLUDE:
