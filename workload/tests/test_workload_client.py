@@ -67,3 +67,14 @@ def test_wait_for_build_failure_raises_with_logs():
         WorkloadClient(BASE, "tok").wait_for_build(
             "art1", "b1", timeout_s=30, interval_s=0, sleep=lambda _s: None
         )
+
+
+@responses.activate
+def test_wait_for_build_times_out():
+    responses.get(f"{BASE}/artifacts/art1/builds/b1", json={"status": "IN_PROGRESS"})
+    clock = iter([0.0, 100.0])
+    with pytest.raises(TimeoutError):
+        WorkloadClient(BASE, "tok").wait_for_build(
+            "art1", "b1", timeout_s=30, interval_s=0,
+            sleep=lambda _s: None, now=lambda: next(clock),
+        )

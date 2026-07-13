@@ -44,7 +44,7 @@ class WorkloadClient:
         }
 
     def create_service_artifact(
-        self, *, name, port, code_ref, environment_vars, cpu, memory, gpu
+        self, *, name: str, port: int, code_ref: dict, environment_vars: list[dict[str, str]], cpu: int, memory: int, gpu: int
     ) -> str:
         payload = {
             "name": name,
@@ -119,7 +119,7 @@ class WorkloadClient:
                 logs = ""
                 try:
                     logs = self.get_build_logs(artifact_id, build_id)
-                except requests.HTTPError:
+                except requests.RequestException:
                     pass
                 raise RuntimeError(f"build {build_id} {status}\n{logs[-4000:]}")
             if now() >= deadline:
