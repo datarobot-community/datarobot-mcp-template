@@ -68,15 +68,6 @@ class WorkloadClient:
                                     "memory": memory,
                                     "gpu": gpu,
                                 },
-                                "readinessProbe": {
-                                    "path": "/",
-                                    "port": port,
-                                    "initialDelaySeconds": 10,
-                                    "periodSeconds": 10,
-                                    "timeoutSeconds": 5,
-                                    "failureThreshold": 6,
-                                    "scheme": "HTTP",
-                                },
                             }
                         ]
                     }

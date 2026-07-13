@@ -60,7 +60,7 @@ All settings are read from the environment (see `workload_deploy/config.py`).
 | `DATAROBOT_ENDPOINT` | *(required)* | DataRobot API endpoint. |
 | `DATAROBOT_API_TOKEN` | *(required)* | Token for the local deploy/destroy/logs tooling. **Not** forwarded to the container. |
 | `WORKLOAD_NAME` | `MCP_SERVER_NAME` or `datarobot-mcp-server` | Name of the service artifact/workload. |
-| `WORKLOAD_BASE_IMAGE` | `datarobotdev/env-python-genai-agents:<tag>` | Base image the workload build starts from. |
+| `WORKLOAD_BASE_IMAGE` | `datarobotdev/env-python-genai-agents:<tag>` | Base image the workload build starts from. This rewrites the `ARG WORKLOAD_BASE_IMAGE=...` default line in `dr_mcp/docker/Dockerfile.workload` inside the bundle at deploy time — it is no longer just cosmetic — because the Workload API's build endpoint takes no build-args, so the ARG's default is what the image build actually uses. |
 | `WORKLOAD_CPU` | `1` | CPU units requested for the workload. |
 | `WORKLOAD_MEMORY_BYTES` | `1073741824` (1 GiB) | Memory requested for the workload. |
 | `WORKLOAD_GPU` | `0` | GPU units requested. |
@@ -115,6 +115,22 @@ workload id, catalog/version ids, build id, endpoint, and MCP URL.
 `destroyworkload` and `workloadlogs` read this file by default so you don't
 have to pass ids by hand; pass `--workload-id`/`--artifact-id` explicitly to
 override.
+
+Note: the state file is only written on a **successful** deploy. If the image
+build fails, the draft service artifact and its Files API catalog version are
+left in place — `destroyworkload` has no state file to read, so it will not
+automatically clean them up. The artifact id is printed to stdout during
+deploy (`==> Creating draft artifact (codeRef)` / `Triggering image build for
+artifact <id>`); use it to delete the artifact manually (e.g. via
+`task destroyworkload -- --workload-id <id> --artifact-id <id>` once a
+workload exists, or a direct Workload API call) if a build fails.
+
+## Health/readiness probes
+
+Container health/readiness probes are intentionally **not** configured yet,
+pending confirmation of the MCP server's actual health check path — a naive
+`GET /` probe would 404 against the FastMCP streamable-http mount (`/mcp`) and
+could cause the rollout to falsely report as never becoming ready.
 
 ## Local development
 

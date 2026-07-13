@@ -37,7 +37,7 @@ def run_deploy(
     state_path: Path = STATE_PATH,
 ) -> dict:
     print(f"==> Assembling bundle from {dr_mcp_dir}")
-    files = assemble_bundle(dr_mcp_dir, dockerfile_path)
+    files = assemble_bundle(dr_mcp_dir, dockerfile_path, base_image=settings.base_image)
 
     print("==> Uploading source to Files API")
     catalog_id, version_id = files_client.upload_bundle(files)

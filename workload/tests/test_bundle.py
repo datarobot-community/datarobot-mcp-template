@@ -47,3 +47,27 @@ def test_bundle_requires_uv_lock(tmp_path):
     df = _write(tmp_path, "docker/Dockerfile.workload", b"FROM base")
     with pytest.raises(FileNotFoundError):
         assemble_bundle(tmp_path, df)
+
+
+def test_bundle_rewrites_base_image_arg(tmp_path):
+    _write(tmp_path, "pyproject.toml")
+    _write(tmp_path, "uv.lock")
+    df = _write(
+        tmp_path,
+        "docker/Dockerfile.workload",
+        b"ARG WORKLOAD_BASE_IMAGE=default/img:1\nFROM ${WORKLOAD_BASE_IMAGE}\n",
+    )
+    files = assemble_bundle(tmp_path, df, base_image="my/mirror:2")
+    content = dict(files)["Dockerfile"]
+    assert b"ARG WORKLOAD_BASE_IMAGE=my/mirror:2" in content
+    assert b"default/img:1" not in content
+
+
+def test_bundle_leaves_dockerfile_unchanged_when_base_image_none(tmp_path):
+    _write(tmp_path, "pyproject.toml")
+    _write(tmp_path, "uv.lock")
+    original = b"ARG WORKLOAD_BASE_IMAGE=default/img:1\nFROM ${WORKLOAD_BASE_IMAGE}\n"
+    df = _write(tmp_path, "docker/Dockerfile.workload", original)
+    files = assemble_bundle(tmp_path, df, base_image=None)
+    content = dict(files)["Dockerfile"]
+    assert content == original
