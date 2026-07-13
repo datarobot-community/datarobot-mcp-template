@@ -41,6 +41,9 @@ def run_deploy(
 
     print("==> Uploading source to Files API")
     catalog_id, version_id = files_client.upload_bundle(files)
+    # Print the catalog ids before the artifact step (which can fail) so a
+    # failed deploy leaves a recoverable reference to the uploaded source.
+    print(f"    uploaded: catalogId={catalog_id} catalogVersionId={version_id}")
 
     print("==> Creating draft artifact (codeRef)")
     artifact_id = wl_client.create_service_artifact(
