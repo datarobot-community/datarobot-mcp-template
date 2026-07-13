@@ -13,10 +13,22 @@
 # limitations under the License.
 
 import os
+import shlex
 from dataclasses import dataclass
 from collections.abc import Mapping
 
-DEFAULT_BASE_IMAGE = "datarobotdev/env-python-genai-agents:68e68b3735af84120828b074"
+# Build-on-demand base: the IBS renders the Dockerfile from a DataRobot
+# execution environment (pulled from the internal registry) rather than a
+# public `FROM` image. Defaults to the "MCP Server [genai-demo]" env; override
+# via WORKLOAD_EXEC_ENV_ID / WORKLOAD_EXEC_ENV_VERSION_ID.
+DEFAULT_EXEC_ENV_ID = "6a4f0d23b4cb1f8f59abd2db"
+DEFAULT_EXEC_ENV_VERSION_ID = "6a4f2377ba28149af647b1cc"
+# Runtime command for the generated image; the MCP server boots via app.main.
+DEFAULT_ENTRYPOINT = ("python", "-m", "app.main")
+# Compute bundle for the workload (1 CPU / 1 GB). The API requires a resource
+# signal; override via WORKLOAD_BUNDLE_ID. Bundle ids come from
+# GET /api/v2/mlops/compute/bundles/ (e.g. cpu.small, cpu.medium, cpu.large).
+DEFAULT_RESOURCE_BUNDLE_ID = "cpu.medium"
 
 # name -> default; always emitted (default used only when unset/empty in env).
 _ALWAYS_ENV: dict[str, str] = {
@@ -28,6 +40,11 @@ _ALWAYS_ENV: dict[str, str] = {
 # forwarded from env only when present and non-empty.
 _PASSTHROUGH_ENV: tuple[str, ...] = (
     "DATAROBOT_ENDPOINT",
+    # The datarobot_genai MCP server requires a DataRobot token at startup
+    # (credentials.has_datarobot_credentials); there is no tokenless mode. The
+    # token is supplied via the local .env / deploy environment (never committed)
+    # and forwarded into the container here.
+    "DATAROBOT_API_TOKEN",
     "MCP_SERVER_NAME",
     "MCP_SERVER_REGISTER_DYNAMIC_TOOLS_ON_STARTUP",
     "MCP_SERVER_REGISTER_DYNAMIC_PROMPTS_ON_STARTUP",
@@ -56,8 +73,8 @@ _PASSTHROUGH_ENV: tuple[str, ...] = (
     "AWS_PREDICTIONS_S3_BUCKET",
     "AWS_PREDICTIONS_S3_PREFIX",
 )
-# Never forwarded to the container (per-request auth).
-_NEVER_ENV = frozenset({"DATAROBOT_API_TOKEN"})
+# Reserved for values that must never reach the container. Empty for now.
+_NEVER_ENV: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True)
@@ -65,14 +82,13 @@ class Settings:
     endpoint: str
     token: str
     workload_name: str
-    base_image: str
-    cpu: int
-    memory: int
-    gpu: int
+    exec_env_id: str
+    exec_env_version_id: str
+    entrypoint: list[str]
     replica_count: int
     importance: str
     port: int
-    resource_bundle_id: str | None
+    resource_bundle_id: str
     build_timeout_s: int
     run_timeout_s: int
     poll_interval_s: int
@@ -90,25 +106,33 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         raise ValueError("DATAROBOT_ENDPOINT is required")
     if not token:
         raise ValueError("DATAROBOT_API_TOKEN is required")
+    entrypoint_raw = e.get("WORKLOAD_ENTRYPOINT")
+    entrypoint = (
+        shlex.split(entrypoint_raw) if entrypoint_raw else list(DEFAULT_ENTRYPOINT)
+    )
     return Settings(
         endpoint=endpoint,
         token=token,
-        workload_name=e.get("WORKLOAD_NAME", e.get("MCP_SERVER_NAME", "datarobot-mcp-server")),
-        base_image=e.get("WORKLOAD_BASE_IMAGE", DEFAULT_BASE_IMAGE),
-        cpu=int(e.get("WORKLOAD_CPU") or "1"),
-        memory=int(e.get("WORKLOAD_MEMORY_BYTES") or str(1024 * 1024 * 1024)),
-        gpu=int(e.get("WORKLOAD_GPU") or "0"),
+        workload_name=e.get(
+            "WORKLOAD_NAME", e.get("MCP_SERVER_NAME", "datarobot-mcp-server")
+        ),
+        exec_env_id=e.get("WORKLOAD_EXEC_ENV_ID") or DEFAULT_EXEC_ENV_ID,
+        exec_env_version_id=e.get("WORKLOAD_EXEC_ENV_VERSION_ID")
+        or DEFAULT_EXEC_ENV_VERSION_ID,
+        entrypoint=entrypoint,
         replica_count=int(e.get("WORKLOAD_REPLICAS") or "1"),
         importance=e.get("WORKLOAD_IMPORTANCE", "low"),
         port=int(e.get("MCP_SERVER_PORT") or "8080"),
-        resource_bundle_id=e.get("WORKLOAD_BUNDLE_ID") or None,
+        resource_bundle_id=e.get("WORKLOAD_BUNDLE_ID") or DEFAULT_RESOURCE_BUNDLE_ID,
         build_timeout_s=int(e.get("WORKLOAD_BUILD_TIMEOUT_S") or "900"),
         run_timeout_s=int(e.get("WORKLOAD_RUN_TIMEOUT_S") or "600"),
         poll_interval_s=int(e.get("WORKLOAD_POLL_INTERVAL_S") or "5"),
     )
 
 
-def build_environment_vars(env: Mapping[str, str] | None = None) -> list[dict[str, str]]:
+def build_environment_vars(
+    env: Mapping[str, str] | None = None,
+) -> list[dict[str, str]]:
     e = _env(env)
     out: dict[str, str] = {}
     for name, default in _ALWAYS_ENV.items():

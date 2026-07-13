@@ -27,5 +27,7 @@ def test_mcp_url_inserts_path_before_query():
 
 
 def test_mcp_url_no_query():
-    assert mcp_url("https://x/api/v2/endpoints/workloads/wl1") == \
-        "https://x/api/v2/endpoints/workloads/wl1/mcp"
+    assert (
+        mcp_url("https://x/api/v2/endpoints/workloads/wl1")
+        == "https://x/api/v2/endpoints/workloads/wl1/mcp"
+    )

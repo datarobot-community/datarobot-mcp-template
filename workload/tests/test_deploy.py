@@ -18,7 +18,9 @@ from workload_deploy.config import Settings
 
 class FakeFiles:
     def upload_bundle(self, files):
-        assert any(a == "Dockerfile" for a, _ in files)
+        names = {a for a, _ in files}
+        assert "uv.lock" in names and "pyproject.toml" in names
+        assert "Dockerfile" not in names  # generated server-side, not shipped
         return ("cat1", "ver1")
 
 
@@ -29,6 +31,18 @@ class FakeWL:
     @staticmethod
     def code_ref(c, v):
         return {"catalogId": c, "catalogVersionId": v}
+
+    @staticmethod
+    def image_build_config(c, v, *, exec_env_id, exec_env_version_id, entrypoint):
+        return {
+            "codeRef": {"catalogId": c, "catalogVersionId": v},
+            "dockerfile": {
+                "source": "generated",
+                "executionEnvironmentId": exec_env_id,
+                "executionEnvironmentVersionId": exec_env_version_id,
+                "entrypoint": entrypoint,
+            },
+        }
 
     def create_service_artifact(self, **kw):
         self.artifact_kw = kw
@@ -55,10 +69,19 @@ class FakeWL:
 
 def _settings():
     return Settings(
-        endpoint="https://x/api/v2", token="tok", workload_name="mcp",
-        base_image="img", cpu=1, memory=1073741824, gpu=0, replica_count=1,
-        importance="low", port=8080, resource_bundle_id=None,
-        build_timeout_s=1, run_timeout_s=1, poll_interval_s=0,
+        endpoint="https://x/api/v2",
+        token="tok",
+        workload_name="mcp",
+        exec_env_id="ee1",
+        exec_env_version_id="eev1",
+        entrypoint=["python", "-m", "app.main"],
+        replica_count=1,
+        importance="low",
+        port=8080,
+        resource_bundle_id="cpu.medium",
+        build_timeout_s=1,
+        run_timeout_s=1,
+        poll_interval_s=0,
     )
 
 
@@ -67,14 +90,14 @@ def test_run_deploy_happy_path(tmp_path):
     (tmp_path / "app" / "main.py").write_bytes(b"x")
     (tmp_path / "pyproject.toml").write_bytes(b"x")
     (tmp_path / "uv.lock").write_bytes(b"x")
-    df = tmp_path / "Dockerfile.workload"
-    df.write_bytes(b"FROM img")
     state_file = tmp_path / ".last_deploy.json"
 
     wl = FakeWL()
     result = deploy.run_deploy(
-        _settings(), FakeFiles(), wl,
-        dr_mcp_dir=tmp_path, dockerfile_path=df,
+        _settings(),
+        FakeFiles(),
+        wl,
+        dr_mcp_dir=tmp_path,
         env={"DATAROBOT_ENDPOINT": "https://x/api/v2", "DATAROBOT_API_TOKEN": "tok"},
         state_path=state_file,
     )
@@ -83,7 +106,7 @@ def test_run_deploy_happy_path(tmp_path):
     assert result["endpoint"].endswith("protonId=p2")
     assert result["mcpUrl"].endswith("/mcp?protonId=p2")
     assert wl.started is True
-    # DATAROBOT_API_TOKEN must not be in the container env vars
+    # The server needs a startup token; it is forwarded into the container env.
     env_names = {e["name"] for e in wl.artifact_kw["environment_vars"]}
-    assert "DATAROBOT_API_TOKEN" not in env_names
+    assert "DATAROBOT_API_TOKEN" in env_names
     assert state_file.is_file()

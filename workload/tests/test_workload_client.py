@@ -20,32 +20,48 @@ BASE = "https://x/api/v2"
 
 
 @responses.activate
-def test_create_service_artifact_sends_code_ref_and_returns_id():
+def test_create_service_artifact_sends_image_build_config_and_returns_id():
     responses.post(f"{BASE}/artifacts/", json={"id": "art1"}, status=201)
     c = WorkloadClient(BASE, "tok")
     aid = c.create_service_artifact(
         name="mcp",
         port=8080,
-        code_ref=WorkloadClient.code_ref("cat1", "ver1"),
+        image_build_config=WorkloadClient.image_build_config(
+            "cat1",
+            "ver1",
+            exec_env_id="ee1",
+            exec_env_version_id="eev1",
+            entrypoint=["python", "-m", "app.main"],
+        ),
         environment_vars=[{"name": "MCP_SERVER_PORT", "value": "8080"}],
-        cpu=1, memory=1073741824, gpu=0,
     )
     assert aid == "art1"
     body = responses.calls[0].request.body
     import json
+
     payload = json.loads(body)
     container = payload["spec"]["containerGroups"][0]["containers"][0]
     assert payload["type"] == "service"
     assert container["primary"] is True
     assert container["port"] == 8080
-    assert container["codeRef"]["datarobot"]["catalogId"] == "cat1"
-    assert container["codeRef"]["datarobot"]["catalogVersionId"] == "ver1"
-    assert container["resourceRequest"]["memory"] == 1073741824
+    # Build-on-demand: codeRef nested under imageBuildConfig; no imageUri, no resourceRequest.
+    ibc = container["imageBuildConfig"]
+    assert ibc["codeRef"]["datarobot"]["catalogId"] == "cat1"
+    assert ibc["codeRef"]["datarobot"]["catalogVersionId"] == "ver1"
+    # Generated Dockerfile from a DR execution environment (no public FROM pull).
+    assert ibc["dockerfile"]["source"] == "generated"
+    assert ibc["dockerfile"]["executionEnvironmentId"] == "ee1"
+    assert ibc["dockerfile"]["executionEnvironmentVersionId"] == "eev1"
+    assert ibc["dockerfile"]["entrypoint"] == ["python", "-m", "app.main"]
+    assert "imageUri" not in container
+    assert "resourceRequest" not in container
 
 
 @responses.activate
 def test_trigger_build_returns_build_ids():
-    responses.post(f"{BASE}/artifacts/art1/builds", json={"buildIds": ["b1"]}, status=202)
+    responses.post(
+        f"{BASE}/artifacts/art1/builds", json={"buildIds": ["b1"]}, status=202
+    )
     assert WorkloadClient(BASE, "tok").trigger_build("art1") == ["b1"]
 
 
@@ -75,22 +91,39 @@ def test_wait_for_build_times_out():
     clock = iter([0.0, 100.0])
     with pytest.raises(TimeoutError):
         WorkloadClient(BASE, "tok").wait_for_build(
-            "art1", "b1", timeout_s=30, interval_s=0,
-            sleep=lambda _s: None, now=lambda: next(clock),
+            "art1",
+            "b1",
+            timeout_s=30,
+            interval_s=0,
+            sleep=lambda _s: None,
+            now=lambda: next(clock),
         )
 
 
 @responses.activate
 def test_create_workload_payload_and_id():
-    responses.post(f"{BASE}/workloads/", json={"id": "wl1", "status": "stopped"}, status=201)
+    responses.post(
+        f"{BASE}/workloads/", json={"id": "wl1", "status": "stopped"}, status=201
+    )
     c = WorkloadClient(BASE, "tok")
-    wid = c.create_workload(name="mcp", artifact_id="art1", importance="low", replica_count=2)
+    wid = c.create_workload(
+        name="mcp",
+        artifact_id="art1",
+        importance="low",
+        replica_count=2,
+        resource_bundle_id="cpu.medium",
+    )
     assert wid == "wl1"
     import json
+
     payload = json.loads(responses.calls[0].request.body)
     assert payload["artifactId"] == "art1"
     assert payload["importance"] == "low"
-    assert payload["runtime"]["replicaCount"] == 2
+    # Group-structured runtime: replicaCount + resourceBundles live per group.
+    group = payload["runtime"]["containerGroups"][0]
+    assert group["name"] == "default"
+    assert group["replicaCount"] == 2
+    assert group["resourceBundles"] == ["cpu.medium"]
 
 
 @responses.activate
@@ -116,10 +149,16 @@ def test_wait_for_workload_errored_raises():
 def test_active_endpoint_prefers_running_proton():
     responses.get(
         f"{BASE}/workloads/wl1/protons",
-        json={"data": [
-            {"status": "stopped", "endpoint": "https://old", "role": "candidate"},
-            {"status": "running", "endpoint": "https://x/api/v2/endpoints/workloads/wl1?protonId=p2", "role": "active"},
-        ]},
+        json={
+            "data": [
+                {"status": "stopped", "endpoint": "https://old", "role": "candidate"},
+                {
+                    "status": "running",
+                    "endpoint": "https://x/api/v2/endpoints/workloads/wl1?protonId=p2",
+                    "role": "active",
+                },
+            ]
+        },
     )
     ep = WorkloadClient(BASE, "tok").active_endpoint("wl1")
     assert ep.endswith("protonId=p2")

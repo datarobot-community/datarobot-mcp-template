@@ -24,7 +24,9 @@ def run_logs(wl_client, workload_id, *, level: str, limit: int) -> dict:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Fetch runtime OTel logs for the MCP workload.")
+    ap = argparse.ArgumentParser(
+        description="Fetch runtime OTel logs for the MCP workload."
+    )
     ap.add_argument("--workload-id")
     ap.add_argument("--level", default="info")
     ap.add_argument("--limit", type=int, default=100)
@@ -34,6 +36,7 @@ def main() -> int:
     workload_id = args.workload_id or read_state()["workloadId"]
     result = run_logs(wl_client, workload_id, level=args.level, limit=args.limit)
     import json
+
     print(json.dumps(result, indent=2))
     return 0
 

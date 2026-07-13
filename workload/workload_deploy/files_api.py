@@ -29,7 +29,9 @@ class FilesApiClient:
         resp = requests.post(
             self._url("/files/fromFile/"),
             headers={"Authorization": f"Bearer {self._token}"},
-            files={"file": (".placeholder", b"placeholder", "application/octet-stream")},
+            files={
+                "file": (".placeholder", b"placeholder", "application/octet-stream")
+            },
         )
         resp.raise_for_status()
         data = resp.json()

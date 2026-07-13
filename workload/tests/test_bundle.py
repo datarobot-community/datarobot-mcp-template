@@ -28,11 +28,9 @@ def test_bundle_includes_required_files_and_excludes_junk(tmp_path):
     _write(tmp_path, "app/tools/user_tools.py")
     _write(tmp_path, "pyproject.toml")
     _write(tmp_path, "uv.lock")
-    _write(tmp_path, "app/__pycache__/x.pyc")   # excluded
-    _write(tmp_path, "app/tests/test_x.py")    # excluded
-    df = _write(tmp_path, "docker/Dockerfile.workload", b"FROM base")
-    names = {arc for arc, _ in assemble_bundle(tmp_path, df)}
-    assert "Dockerfile" in names
+    _write(tmp_path, "app/__pycache__/x.pyc")  # excluded
+    _write(tmp_path, "app/tests/test_x.py")  # excluded
+    names = {arc for arc, _ in assemble_bundle(tmp_path)}
     assert "uv.lock" in names
     assert "pyproject.toml" in names
     assert "app/main.py" in names
@@ -41,33 +39,26 @@ def test_bundle_includes_required_files_and_excludes_junk(tmp_path):
     assert "app/tests/test_x.py" not in names
 
 
+def test_bundle_does_not_ship_a_dockerfile(tmp_path):
+    # The IBS generates the Dockerfile from the execution environment; the
+    # bundle must not carry one of its own.
+    _write(tmp_path, "app/main.py")
+    _write(tmp_path, "pyproject.toml")
+    _write(tmp_path, "uv.lock")
+    _write(tmp_path, "docker/Dockerfile.workload", b"FROM base")  # not source
+    names = {arc for arc, _ in assemble_bundle(tmp_path)}
+    assert "Dockerfile" not in names
+
+
 def test_bundle_requires_uv_lock(tmp_path):
     _write(tmp_path, "app/main.py")
     _write(tmp_path, "pyproject.toml")
-    df = _write(tmp_path, "docker/Dockerfile.workload", b"FROM base")
     with pytest.raises(FileNotFoundError):
-        assemble_bundle(tmp_path, df)
+        assemble_bundle(tmp_path)
 
 
-def test_bundle_rewrites_base_image_arg(tmp_path):
-    _write(tmp_path, "pyproject.toml")
+def test_bundle_requires_pyproject(tmp_path):
+    _write(tmp_path, "app/main.py")
     _write(tmp_path, "uv.lock")
-    df = _write(
-        tmp_path,
-        "docker/Dockerfile.workload",
-        b"ARG WORKLOAD_BASE_IMAGE=default/img:1\nFROM ${WORKLOAD_BASE_IMAGE}\n",
-    )
-    files = assemble_bundle(tmp_path, df, base_image="my/mirror:2")
-    content = dict(files)["Dockerfile"]
-    assert b"ARG WORKLOAD_BASE_IMAGE=my/mirror:2" in content
-    assert b"default/img:1" not in content
-
-
-def test_bundle_leaves_dockerfile_unchanged_when_base_image_none(tmp_path):
-    _write(tmp_path, "pyproject.toml")
-    _write(tmp_path, "uv.lock")
-    original = b"ARG WORKLOAD_BASE_IMAGE=default/img:1\nFROM ${WORKLOAD_BASE_IMAGE}\n"
-    df = _write(tmp_path, "docker/Dockerfile.workload", original)
-    files = assemble_bundle(tmp_path, df, base_image=None)
-    content = dict(files)["Dockerfile"]
-    assert content == original
+    with pytest.raises(FileNotFoundError):
+        assemble_bundle(tmp_path)

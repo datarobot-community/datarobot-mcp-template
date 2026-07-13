@@ -34,4 +34,6 @@ def read_state(path: Path = STATE_PATH) -> dict:
 def mcp_url(endpoint: str, mount_path: str = "/mcp") -> str:
     parts = urlsplit(endpoint)
     new_path = parts.path.rstrip("/") + mount_path
-    return urlunsplit((parts.scheme, parts.netloc, new_path, parts.query, parts.fragment))
+    return urlunsplit(
+        (parts.scheme, parts.netloc, new_path, parts.query, parts.fragment)
+    )

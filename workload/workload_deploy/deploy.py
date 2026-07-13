@@ -23,7 +23,6 @@ from workload_deploy.workload_client import WorkloadClient
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _DR_MCP_DIR = _REPO_ROOT / "dr_mcp"
-_DOCKERFILE = _DR_MCP_DIR / "docker" / "Dockerfile.workload"
 
 
 def run_deploy(
@@ -32,12 +31,11 @@ def run_deploy(
     wl_client,
     *,
     dr_mcp_dir,
-    dockerfile_path,
     env,
     state_path: Path = STATE_PATH,
 ) -> dict:
     print(f"==> Assembling bundle from {dr_mcp_dir}")
-    files = assemble_bundle(dr_mcp_dir, dockerfile_path, base_image=settings.base_image)
+    files = assemble_bundle(dr_mcp_dir)
 
     print("==> Uploading source to Files API")
     catalog_id, version_id = files_client.upload_bundle(files)
@@ -45,15 +43,20 @@ def run_deploy(
     # failed deploy leaves a recoverable reference to the uploaded source.
     print(f"    uploaded: catalogId={catalog_id} catalogVersionId={version_id}")
 
-    print("==> Creating draft artifact (codeRef)")
+    print(
+        "==> Creating draft artifact (imageBuildConfig/codeRef, generated Dockerfile)"
+    )
     artifact_id = wl_client.create_service_artifact(
         name=settings.workload_name,
         port=settings.port,
-        code_ref=wl_client.code_ref(catalog_id, version_id),
+        image_build_config=wl_client.image_build_config(
+            catalog_id,
+            version_id,
+            exec_env_id=settings.exec_env_id,
+            exec_env_version_id=settings.exec_env_version_id,
+            entrypoint=settings.entrypoint,
+        ),
         environment_vars=build_environment_vars(env),
-        cpu=settings.cpu,
-        memory=settings.memory,
-        gpu=settings.gpu,
     )
 
     print(f"==> Triggering image build for artifact {artifact_id}")
@@ -63,8 +66,10 @@ def run_deploy(
     build_id = build_ids[0]
     print(f"==> Waiting for build {build_id} (up to {settings.build_timeout_s}s)")
     wl_client.wait_for_build(
-        artifact_id, build_id,
-        timeout_s=settings.build_timeout_s, interval_s=settings.poll_interval_s,
+        artifact_id,
+        build_id,
+        timeout_s=settings.build_timeout_s,
+        interval_s=settings.poll_interval_s,
     )
 
     print("==> Creating workload")
@@ -81,7 +86,8 @@ def run_deploy(
     try:
         wl_client.wait_for_workload(
             workload_id,
-            timeout_s=settings.run_timeout_s, interval_s=settings.poll_interval_s,
+            timeout_s=settings.run_timeout_s,
+            interval_s=settings.poll_interval_s,
         )
     except (RuntimeError, TimeoutError) as exc:
         print(f"!! workload did not reach running: {exc}", file=sys.stderr)
@@ -125,15 +131,20 @@ def main() -> int:
     files_client = FilesApiClient(settings.endpoint, settings.token)
     wl_client = WorkloadClient(settings.endpoint, settings.token)
     result = run_deploy(
-        settings, files_client, wl_client,
-        dr_mcp_dir=_DR_MCP_DIR, dockerfile_path=_DOCKERFILE, env=os.environ,
+        settings,
+        files_client,
+        wl_client,
+        dr_mcp_dir=_DR_MCP_DIR,
+        env=os.environ,
     )
     print("\n=== MCP workload deployed ===")
     for k in ("artifactId", "workloadId", "catalogVersionId", "buildId"):
         print(f"{k}: {result[k]}")
     print(f"Endpoint: {result['endpoint']}")
     print(f"MCP URL : {result['mcpUrl']}")
-    print("Note: callers authenticate per-request with their own DataRobot bearer token.")
+    print(
+        "Note: callers authenticate per-request with their own DataRobot bearer token."
+    )
     return 0
 
 

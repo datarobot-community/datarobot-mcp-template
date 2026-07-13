@@ -45,11 +45,13 @@ def _excluded(arcname: str) -> bool:
     return any(p.match(arcname) for p in EXCLUDE_PATTERNS)
 
 
-def assemble_bundle(
-    dr_mcp_dir: str | os.PathLike,
-    dockerfile_path: str | os.PathLike,
-    base_image: str | None = None,
-) -> list[tuple[str, bytes]]:
+def assemble_bundle(dr_mcp_dir: str | os.PathLike) -> list[tuple[str, bytes]]:
+    """Collect the MCP server source for the build-on-demand upload.
+
+    No Dockerfile is shipped: the IBS generates one from the chosen execution
+    environment and the project's package manager (uv, detected via uv.lock).
+    The bundle therefore only needs the source tree plus pyproject.toml/uv.lock.
+    """
     root = Path(dr_mcp_dir)
     files: list[tuple[str, bytes]] = []
     for item in _INCLUDE:
@@ -65,23 +67,11 @@ def assemble_bundle(
                 arc = f.relative_to(root).as_posix()
                 if not _excluded(arc):
                     files.append((arc, f.read_bytes()))
-    # Dockerfile always lands at bundle root as "Dockerfile".
-    df = Path(dockerfile_path)
-    if not df.is_file():
-        raise FileNotFoundError(f"Dockerfile not found: {df}")
-    dockerfile_bytes = df.read_bytes()
-    if base_image:
-        text = dockerfile_bytes.decode()
-        text = re.sub(
-            r"^(ARG WORKLOAD_BASE_IMAGE=).*$", lambda m: m.group(1) + base_image, text, flags=re.M
-        )
-        dockerfile_bytes = text.encode()
-    files.append(("Dockerfile", dockerfile_bytes))
 
     names = {a for a, _ in files}
-    for required in ("Dockerfile", "uv.lock"):
+    for required in ("pyproject.toml", "uv.lock"):
         if required not in names:
             raise FileNotFoundError(
-                f"bundle missing required file '{required}' (needed by the image build)"
+                f"bundle missing required file '{required}' (needed by the generated image build)"
             )
     return files

@@ -23,7 +23,9 @@ def test_upload_bundle_runs_full_sequence():
     responses.post(f"{BASE}/files/fromFile/", json={"catalogId": "cat1"}, status=201)
     responses.post(f"{BASE}/files/cat1/stages/", json={"stageId": "stg1"}, status=201)
     responses.post(f"{BASE}/files/cat1/stages/stg1/upload/", json={}, status=200)
-    responses.post(f"{BASE}/files/cat1/fromStage/", json={"catalogVersionId": "ver1"}, status=200)
+    responses.post(
+        f"{BASE}/files/cat1/fromStage/", json={"catalogVersionId": "ver1"}, status=200
+    )
 
     cat, ver = FilesApiClient(BASE, "tok").upload_bundle(
         [("Dockerfile", b"FROM base"), ("uv.lock", b"lock")]

@@ -28,14 +28,24 @@ def resolve_ids(args_workload, args_artifact, state_reader=read_state):
 
 
 def run_destroy(
-    wl_client, workload_id, artifact_id, *, timeout_s, interval_s,
-    sleep=time.sleep, now=time.monotonic,
+    wl_client,
+    workload_id,
+    artifact_id,
+    *,
+    timeout_s,
+    interval_s,
+    sleep=time.sleep,
+    now=time.monotonic,
 ) -> None:
     wl_client.stop_workload(workload_id)
     try:
         wl_client.wait_for_workload(
-            workload_id, target="stopped",
-            timeout_s=timeout_s, interval_s=interval_s, sleep=sleep, now=now,
+            workload_id,
+            target="stopped",
+            timeout_s=timeout_s,
+            interval_s=interval_s,
+            sleep=sleep,
+            now=now,
         )
     except (RuntimeError, TimeoutError):
         pass  # proceed to delete regardless
@@ -53,10 +63,16 @@ def main() -> int:
     wl_client = WorkloadClient(settings.endpoint, settings.token)
     workload_id, artifact_id = resolve_ids(args.workload_id, args.artifact_id)
     run_destroy(
-        wl_client, workload_id, artifact_id,
-        timeout_s=settings.run_timeout_s, interval_s=settings.poll_interval_s,
+        wl_client,
+        workload_id,
+        artifact_id,
+        timeout_s=settings.run_timeout_s,
+        interval_s=settings.poll_interval_s,
     )
-    print(f"Destroyed workload {workload_id}" + (f" and artifact {artifact_id}" if artifact_id else ""))
+    print(
+        f"Destroyed workload {workload_id}"
+        + (f" and artifact {artifact_id}" if artifact_id else "")
+    )
     return 0
 
 
