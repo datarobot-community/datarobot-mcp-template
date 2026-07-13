@@ -33,7 +33,7 @@ Run these from the repo root (they delegate into `workload/` via the Taskfile
 | Root task | workload/ task | Description |
 | --- | --- | --- |
 | `task deployasworkload` | `task install && task deploy` | Installs deps, then bundles + uploads + builds + deploys the MCP server as a workload. Prints the artifact/workload/build ids, the workload endpoint, and the derived MCP URL on success. |
-| `task destroyworkload` | `task destroy` | Stops and deletes the workload, then deletes the service artifact. Reads ids from `workload/.last_deploy.json` (written by the last successful deploy) unless `--workload-id`/`--artifact-id` are passed explicitly. |
+| `task destroyworkload` | `task destroy` | Stops and deletes the workload, then deletes the service artifact. Reads ids from `workload/.last_deploy.json` (written by the last successful deploy) unless `--workload-id` is passed explicitly (note: `resolve_ids` honors `--artifact-id` only when `--workload-id` is also passed; passing `--artifact-id` alone still falls back to the state file for both ids). |
 | `task workloadlogs` | `task logs` | Fetches recent runtime OTel logs for the workload (`--workload-id`, `--level`, `--limit`). Useful for confirming the server booted and for diagnosing a failed deploy. |
 
 Extra CLI args pass through, e.g.:
@@ -70,8 +70,11 @@ All settings are read from the environment (see `workload_deploy/config.py`).
 | `WORKLOAD_BUILD_TIMEOUT_S` | `900` | Max seconds to wait for the image build. |
 | `WORKLOAD_RUN_TIMEOUT_S` | `600` | Max seconds to wait for the workload to reach running (deploy) or stopped (destroy). |
 | `WORKLOAD_POLL_INTERVAL_S` | `5` | Poll interval in seconds for build/workload status checks. |
-| `MCP_SERVER_PORT` | `8080` | Port the MCP server listens on inside the container. |
-| `MCP_SERVER_LOG_LEVEL`, `APP_LOG_LEVEL`, `OTEL_ENABLED`, and the other `MCP_SERVER_*`/`OTEL_*`/`ENABLE_*`/`AWS_*` variables | — | Forwarded into the container's environment when set (see `_PASSTHROUGH_ENV` in `config.py`); otherwise omitted. |
+| `MCP_SERVER_PORT` | `8080` | Always set on the container. |
+| `MCP_SERVER_LOG_LEVEL` | `WARNING` | Always set on the container. |
+| `APP_LOG_LEVEL` | `INFO` | Always set on the container. |
+| `OTEL_ENABLED` | `true` | Always set on the container. |
+| Other `MCP_SERVER_*`, `OTEL_*`, `ENABLE_*`, `AWS_*`, `USER_NAME`, `SANDBOX_IMAGE`, `SESSION_SECRET_KEY` | — | Forwarded into the container's environment only when set and non-empty (see `_PASSTHROUGH_ENV` in `config.py`); otherwise omitted. |
 
 ## Auth model — no token in the container
 
