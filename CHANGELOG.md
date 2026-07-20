@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased Changes
 
+## 11.11.0
+- Upgraded MCP library `datarobot-genai[drmcp]` to `>=0.26.0,<0.27.0` (see [datarobot-genai CHANGELOG](https://github.com/datarobot-oss/datarobot-genai/blob/main/CHANGELOG.md) for full release notes). MCP-relevant changes since **0.23.18**:
+  - **0.26.1** — `drmcputils/files`: shared-container, path-based `BlobStore` (single Files container discovered by a marker tag, prefix-based upload/listing) replacing the previous per-blob-container design. `drmcputils/panels`: conversation-scoped `PanelStore`, resolved per request from the `x-datarobot-conversation-id` header, so `list_panels` / `panels://{source}` return only the current conversation's panels instead of every panel across all conversations. `drtools/panels`: new `move_panel` tool to promote a panel between sources (e.g. staging→main) while preserving its id.
+  - **0.25.4** — `drtools/vdb`: `vdb_query` validates that the deployment is a vector database before calling the prediction server.
+  - **0.25.1** — `drtools/vdb`: `vdb_get` returns a clean not-found error for malformed vector-database IDs and uses `allow_redirects=False` so unexpected responses surface as structured errors; `vdb_deploy` submits and polls instead of blocking on the SDK's long async wait.
+  - **0.23.25** — `drtools/vdb`: added `vdb_create`, `vdb_deploy`, and `vdb_get`; fixed `vdb_query`'s scoring route and a `vdb_list` 400 caused by an unsupported query param.
+  - **0.23.19** — `drtools/files_api`: tweaked `description` / `description_ui` fields on file-related tools for clearer agent and user-facing text.
+- Updated `af-component-datarobot-mcp` template component from 0.0.47 to 0.0.49 and bumped the default MCP execution environment version ID.
+
 ## 11.10.0
 - Upgraded MCP library `datarobot-genai[drmcp]` to `>=0.23.18,<0.24.0` (see [datarobot-genai CHANGELOG](https://github.com/datarobot-oss/datarobot-genai/blob/main/CHANGELOG.md) for full release notes). MCP-relevant changes since **0.15.45**:
   - **0.23.18** — Replaced `datarobot-early-access` with stable `datarobot[fs]>=3.17`.

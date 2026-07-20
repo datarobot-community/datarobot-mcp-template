@@ -581,11 +581,11 @@ wheels = [
 
 [[package]]
 name = "datarobot-genai"
-version = "0.23.21"
+version = "0.26.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/b9/6e/c9b42cec494c2e54c86fc1b988b3f9b0d76ecacb3d50b0b95b07f33eb51d/datarobot_genai-0.23.21.tar.gz", hash = "sha256:212584f29b23d7f1afd5ff481a82c0e0b23def181ceca8d08ec3268557daeff3", size = 495924, upload-time = "2026-07-13T16:20:43.958Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8c/3e/7f50c3713c774dba40dbc168715d130dda17ec43b6a2d6007f49b98d05b8/datarobot_genai-0.26.1.tar.gz", hash = "sha256:0f35e18110152449ec96579bc5792e6985e6523f395a2814e26922d107e0dfdf", size = 509880, upload-time = "2026-07-20T15:17:15.569Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/88/39/32aa28b89862c0aa057d08a4c7ece54da8b04dc432fce7848bf4142a6073/datarobot_genai-0.23.21-py3-none-any.whl", hash = "sha256:165769925e284508bd9b913eb136cf9c48715cecfef43ffff758560fb3981ef2", size = 714671, upload-time = "2026-07-13T16:20:41.905Z" },
+    { url = "https://files.pythonhosted.org/packages/13/a6/dfcfb1119b9d682c81b8d14790e48e692b9b6a0fcd053e8d914208623b32/datarobot_genai-0.26.1-py3-none-any.whl", hash = "sha256:4ef2771874e64273a5373a77e8daa9d5608b29e7f273fbbc1944793548e8c4a5", size = 730963, upload-time = "2026-07-20T15:17:13.731Z" },
 ]
 
 [package.optional-dependencies]
@@ -679,7 +679,7 @@ wheels = [
 
 [[package]]
 name = "dr-mcp"
-version = "11.10.0"
+version = "11.11.0"
 source = { editable = "." }
 dependencies = [
     { name = "datarobot-genai", extra = ["drmcp"] },
@@ -701,7 +701,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "click", marker = "extra == 'dev'", specifier = ">=8.3.0" },
-    { name = "datarobot-genai", extras = ["drmcp"], specifier = ">=0.23.18,<0.24.0" },
+    { name = "datarobot-genai", extras = ["drmcp"], specifier = ">=0.26.0,<0.27.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8.0" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.6.0" },
     { name = "pydantic", marker = "extra == 'dev'", specifier = ">=2.6.1" },
