@@ -1,0 +1,31 @@
+---
+# https://taskfile.dev
+version: '3'
+
+tasks:
+  install:
+    desc: "🔧 Install dependencies"
+    cmds:
+      - uv sync --all-extras --dev
+  deploy:
+    desc: "🟢 Deploy the MCP server as a DataRobot Workload (build-on-demand)"
+    cmds:
+      - uv run python -m workload_deploy.deploy
+  destroy:
+    desc: "🔴 Stop and delete the MCP workload + artifact"
+    cmds:
+      - uv run python -m workload_deploy.destroy {{.CLI_ARGS}}
+  logs:
+    desc: "📜 Fetch runtime OTel logs for the MCP workload"
+    cmds:
+      - uv run python -m workload_deploy.logs {{.CLI_ARGS}}
+  lint:
+    desc: "🧹 Run linters"
+    cmds:
+      - uv run ruff format .
+      - uv run ruff check . --fix
+      - uv run mypy --pretty .
+  test:
+    desc: "✅ Run unit tests"
+    cmds:
+      - uv run pytest -q
