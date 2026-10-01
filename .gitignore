@@ -248,3 +248,7 @@ Taskfile.gen.yaml
 .datarobot/cli/state.yaml
 
 .history/
+
+# build dir for datarobot-workload artifact creation
+# --> needed to customize files to use in artifact creation, once created can be deleted
+.build/

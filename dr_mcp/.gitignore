@@ -173,8 +173,6 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-/docker/requirements.txt
-
 # temp files
 temp.txt
 
@@ -183,3 +181,9 @@ temp.txt
 # This is the folder of MCP item metadata which is extracted before deployment (pulumi/Terraform). It will be saved to
 # DB through the pulumi/Terraform-based MCP deployment automation.
 /dev_tools/lineage/mcp_item_metadata/*.yaml
+
+# Retired: MCP protected resource metadata is configured from MCP_OAUTH_* /
+# MCP_XAA_* environment variables and this file is no longer read. Still ignored
+# so an existing local copy does not turn up as untracked — delete it once its
+# values have moved to .env.
+oauth-config.yaml

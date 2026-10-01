@@ -12,19 +12,81 @@ vars:
         echo "uv"
       fi
 
+  ENABLE_MCP_ON_WORKLOAD_API_RESOLVED:
+    sh: |
+      # Lower-cased to match the pulumi-side validation, which lowercases the
+      # value before checking it — both ends must accept the same spellings.
+      # 1) OS env (includes the root dotenv when invoked via the repo root's task wrapper)
+      if [ -n "${ENABLE_MCP_ON_WORKLOAD_API:-}" ]; then
+        echo "$ENABLE_MCP_ON_WORKLOAD_API" | tr '[:upper:]' '[:lower:]' | xargs
+        exit 0
+      fi
+      # 2) Fallback for standalone `task install` runs from this app directory
+      for env_file in ../.env "../.env.${ENV:-testing}" .env; do
+        if [ -f "$env_file" ]; then
+          line="$(grep -E '^[[:space:]]*ENABLE_MCP_ON_WORKLOAD_API=' "$env_file" | tail -n 1 || true)"
+          if [ -n "$line" ]; then
+            val="${line#ENABLE_MCP_ON_WORKLOAD_API=}"
+            val="${val%\"}"; val="${val#\"}"; val="${val%\'}"; val="${val#\'}"
+            echo "$val" | tr '[:upper:]' '[:lower:]' | xargs
+            exit 0
+          fi
+        fi
+      done
+      echo ""
+
 tasks:
   load-and-save-mcp-item-metadata:
     desc: "Load and save MCP item metadata"
     cmds:
       - echo "🔧 Loading and saving MCP item metadata.."
       - "{{.UV_CMD}} run dev_tools/lineage/cli.py load-and-save-mcp-item-metadata"
+
+  workload-deployment-flag-check:
+    desc: "ℹ️ Validate ENABLE_MCP_ON_WORKLOAD_API and print the effective MCP deployment mode"
+    silent: true
+    vars:
+      RAW_ENABLE_MCP_ON_WORKLOAD_API: '{{.ENABLE_MCP_ON_WORKLOAD_API_RESOLVED}}'
+    cmds:
+      - |
+        case "{{.RAW_ENABLE_MCP_ON_WORKLOAD_API}}" in
+          true)
+            echo "✅ ENABLE_MCP_ON_WORKLOAD_API resolves to true — deploying as DataRobot workload."
+            ;;
+          false)
+            echo "✅ ENABLE_MCP_ON_WORKLOAD_API resolves to false — deploying as DataRobot serverless."
+            ;;
+          "")
+            echo "⚠️  ENABLE_MCP_ON_WORKLOAD_API is not set; deploy will default to DataRobot serverless."
+            echo "ℹ️  To choose explicitly, set in .env or your shell:"
+            echo "       ENABLE_MCP_ON_WORKLOAD_API=false for DataRobot serverless deployment"
+            echo "    or ENABLE_MCP_ON_WORKLOAD_API=true for DataRobot workload deployment."
+            ;;
+          *)
+            echo "❌  Invalid ENABLE_MCP_ON_WORKLOAD_API '{{.RAW_ENABLE_MCP_ON_WORKLOAD_API}}'."
+            echo "ℹ️  Set a valid value in .env or your shell:"
+            echo "       ENABLE_MCP_ON_WORKLOAD_API=false for DataRobot serverless deployment"
+            echo "    or ENABLE_MCP_ON_WORKLOAD_API=true for DataRobot workload deployment."
+            exit 1
+            ;;
+        esac
+
   install:
     desc: "🔧 Install dependencies"
+    vars:
+      EFFECTIVE_ENABLE_MCP_ON_WORKLOAD_API: '{{.ENABLE_MCP_ON_WORKLOAD_API_RESOLVED | default "false"}}'
+    deps:
+      - workload-deployment-flag-check
     cmds:
       - echo "🔧 Installing dependencies.."
       - "{{.UV_CMD}} sync --all-extras"
-      - task: generate-docker-requirement-file
-      - task: load-and-save-mcp-item-metadata
+      - |
+        case "{{.EFFECTIVE_ENABLE_MCP_ON_WORKLOAD_API}}" in
+          false)
+            echo "🔧 Loading and saving MCP item metadata.."
+            {{.UV_CMD}} run dev_tools/lineage/cli.py load-and-save-mcp-item-metadata
+            ;;
+        esac
     silent: true
 
   dev:
@@ -33,7 +95,7 @@ tasks:
       - echo "🔨 Starting development server"
       - task: install
       - |
-        (cd .. && DR_SKIP_PLUGIN_UPDATE_CHECK=true dr xp --plain-output) &
+        (cd .. && dr --skip-plugin-update-check xp --plain-output) &
         DR_XP_PID=$!
         trap "kill $DR_XP_PID 2>/dev/null || true" EXIT
         {{.UV_CMD}} run app/main.py
@@ -205,17 +267,6 @@ tasks:
         fi
         echo ""
         {{.UV_CMD}} run python test_interactive.py
-    silent: true
-
-  generate-docker-requirement-file:
-    desc: "🔨 Generate docker requirements.txt file"
-    cmds:
-      - echo "🔨 Generating docker requirements.txt file..."
-      # If the content of the requirement.txt file doesn't change, don't trigger an update
-      - >-
-        {{.UV_CMD}} export --format requirements-txt --no-emit-project --project . > ./docker/requirements.txt.tmp && if !
-        cmp -s ./docker/requirements.txt.tmp ./docker/requirements.txt; then mv ./docker/requirements.txt.tmp ./docker/requirements.txt;
-        else rm ./docker/requirements.txt.tmp; fi
     silent: true
 
   release_files:

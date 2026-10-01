@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased Changes
 
+## 11.13.0
+- Updated `base` component from 1d8a24d to dcc1ce08c924fa00b4b0b3ad9022e190b4242fec:
+  - Synced the pulumi-datarobot plugin version with the SDK floor and updated default pulumi-datarobot plugin version in taskfile.
+  - Bumped pulumi library version.
+- Updated `af-component-datarobot-mcp` template component from 0.0.62 to 0.0.70:
+  - Refactored user runtime parameters and fixed workload environment propagation.
+  - Replaced MCP_DEPLOYMENT_TYPE with user-driven boolean flag.
+  - Bumped default MCP execution environment version ID.
+  - Updated drmcp dependency and added uv lock generator pipeline.
+  - Added MCP workload API integration.
+  - Added MCP-Okta support documentation.
+  - Made enclave entitlement test fixture mypy-clean and added type-checking infrastructure in CI.
+  - Fixed workload use case linking bug.
+
 ## 11.11.0
 - Upgraded MCP library `datarobot-genai[drmcp]` to `>=0.26.0,<0.27.0` (see [datarobot-genai CHANGELOG](https://github.com/datarobot-oss/datarobot-genai/blob/main/CHANGELOG.md) for full release notes). MCP-relevant changes since **0.23.18**:
   - **0.26.1** — `drmcputils/files`: shared-container, path-based `BlobStore` (single Files container discovered by a marker tag, prefix-based upload/listing) replacing the previous per-blob-container design. `drmcputils/panels`: conversation-scoped `PanelStore`, resolved per request from the `x-datarobot-conversation-id` header, so `list_panels` / `panels://{source}` return only the current conversation's panels instead of every panel across all conversations. `drtools/panels`: new `move_panel` tool to promote a panel between sources (e.g. staging→main) while preserving its id.
